@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "144558859080",
+    "project_id": "quiz-app-leo",
+    "storage_bucket": "quiz-app-leo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144558859080:android:837200b31e571a44c6097d",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA64qGOsPtMft_IpdV3aIbJjl7oaOF51u4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
