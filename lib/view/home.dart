@@ -23,11 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quiz App'),
-        centerTitle: true,
-        elevation: 2,
-      ),
+     
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -99,20 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // Guest mode (working)
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const QuizScreen(studentName: ''),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'Continue as Guest (Testing Only)',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
+   
               ],
             ),
           ),
@@ -143,11 +126,15 @@ class _HomeScreenState extends State<HomeScreen> {
         print('✅ [HomeScreen] Login successful for: $studentId - $lastName');
 
         // Navigate to quiz screen with student data
+        // After successful login
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                QuizScreen(studentId: studentId, studentName: lastName),
+            builder: (context) => QuizScreen(
+              studentId: studentId,
+              studentName: lastName,
+              // quizId: 'specific-quiz-id', // Optional: load specific quiz
+            ),
           ),
         );
       } else {
