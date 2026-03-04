@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../screens/quiz_screen.dart';
 import '../widgets/login_dialog.dart';
+import '../live_monitoring.dart';
 
 class HomeScreen extends StatefulWidget {
   // Changed to StatefulWidget
@@ -23,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -95,11 +95,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // Guest mode (working)
-   
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // In your home.dart or admin dashboard
+  void _openMonitoring() {
+    // Simple teacher PIN or check if user is teacher
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Teacher Access'),
+        content: const TextField(
+          decoration: InputDecoration(
+            hintText: 'Enter PIN',
+            border: OutlineInputBorder(),
+          ),
+          obscureText: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Simple PIN check (you can change this)
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LiveMonitoringScreen(),
+                ),
+              );
+            },
+            child: const Text('Access'),
+          ),
+        ],
       ),
     );
   }

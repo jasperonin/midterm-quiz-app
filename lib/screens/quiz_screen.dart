@@ -171,6 +171,8 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // In quiz_screen.dart, replace your _saveScoreToUserDocument with this:
 
+  // In quiz_screen.dart - Update _saveScoreToUserDocument
+
   Future<void> _saveScoreToUserDocument() async {
     if (widget.studentId == null) return;
 
@@ -200,33 +202,30 @@ class _QuizScreenState extends State<QuizScreen> {
       final userDoc = await userRef.get();
 
       if (userDoc.exists) {
-        // User exists - get current scores and append
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
         List<dynamic> existingScores = userData['scores'] ?? [];
-
-        // Add new score to the list
         existingScores.add(newScore);
 
-        // Update document - KEEP examStatus as 'active' (don't change it)
+        // 👇 ADD hasTakenExam HERE TOO (double guarantee)
         await userRef.set({
           'scores': existingScores,
           'lastActive': FieldValue.serverTimestamp(),
-          // ❌ REMOVE examStatus update - leave it as 'active'
+          'hasTakenExam': true, // Backup
         }, SetOptions(merge: true));
 
-        print('✅ Score saved. examStatus remains ACTIVE');
+        print('✅ Score saved with hasTakenExam=true');
       } else {
-        // New user - create with active status
         await userRef.set({
           'student_id': widget.studentId,
           'last_name': widget.studentName ?? '',
           'scores': [newScore],
-          'examStatus': 'active', // Set to active on first completion
+          'examStatus': 'active',
+          'hasTakenExam': true,
           'createdAt': FieldValue.serverTimestamp(),
           'lastActive': FieldValue.serverTimestamp(),
         });
 
-        print('✅ New user created with ACTIVE status');
+        print('✅ New user created with hasTakenExam=true');
       }
     } catch (e) {
       print('❌ Error saving score: $e');
@@ -307,7 +306,32 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  // In quiz_screen.dart, add this method
+  // In quiz_screen.dart - Enhanced debugging
+
+  Future<void> _setHasTakenExam() async {
+    if (widget.studentId == null) {
+      print('❌ Cannot set hasTakenExam: studentId is null');
+      return;
+    }
+
+    print('🔍 Setting hasTakenExam=true for ${widget.studentId}');
+
+    try {
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.studentId);
+
+      await userRef.set({
+        'hasTakenExam': true,
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      print('✅ hasTakenExam set to true for ${widget.studentId}');
+    } catch (e) {
+      print('❌ Error setting hasTakenExam: $e');
+    }
+  }
+
   Future<bool> _canStartExam() async {
     if (widget.studentId == null) return true; // Guest mode always allowed
 
@@ -420,17 +444,16 @@ class _QuizScreenState extends State<QuizScreen> {
     _timer.cancel();
     await _detector.resetViolations();
 
-    // ❌ REMOVE THIS LINE - Don't reset to inactive
-    // await _setExamStatus('inactive');
+    // 👇 ADD THIS LINE - Set hasTakenExam to true
+    await _setHasTakenExam();
 
-    // Save score (keep this)
+    // Save score
     if (widget.studentId != null) {
       await _saveScoreToUserDocument();
     }
 
     if (!mounted) return;
 
-    // Show completion dialog with "Already Taken" warning
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -444,6 +467,10 @@ class _QuizScreenState extends State<QuizScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
+            Text(
+              'Score: $_score / 40',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
@@ -452,7 +479,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'Note: You cannot retake this quiz.\nReach out to your instructor if this is an error.',
+                'Note: You cannot retake this quiz.\nContact your teacher if this is an error.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.orange),
               ),
@@ -475,6 +502,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
     _timer.cancel();
 
+    // 👇 ADD THIS LINE - Set hasTakenExam to true even on termination
+    _setHasTakenExam();
+
+    // Reset exam status
     _setExamStatus('inactive');
 
     setState(() {
