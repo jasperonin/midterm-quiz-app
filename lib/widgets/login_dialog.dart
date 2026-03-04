@@ -11,23 +11,23 @@ class LoginDialog extends StatefulWidget {
 
 class _LoginDialogState extends State<LoginDialog> {
   final AuthService _authService = AuthService();
-  
+
   // Controllers
   final TextEditingController _studentIdController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  
+
   // State
   bool _isLoading = false;
   bool _isIdValidated = false;
   String? _errorMessage;
   String? _validatedStudentId;
-  
+
   @override
   void initState() {
     super.initState();
     print('📱 [LoginDialog] initialized');
   }
-  
+
   @override
   void dispose() {
     _studentIdController.dispose();
@@ -39,23 +39,23 @@ class _LoginDialogState extends State<LoginDialog> {
   Future<void> _validateStudentId() async {
     String studentId = _studentIdController.text.trim();
     print('📝 [LoginDialog] Validating student ID: "$studentId"');
-    
+
     if (studentId.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter your Student ID';
       });
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-    
+
     try {
       bool exists = await _authService.validateStudentId(studentId);
       print('📝 [LoginDialog] Validation result: $exists');
-      
+
       if (exists) {
         setState(() {
           _isIdValidated = true;
@@ -65,7 +65,7 @@ class _LoginDialogState extends State<LoginDialog> {
         print('✅ [LoginDialog] ID validated, moving to step 2');
       } else {
         setState(() {
-          _errorMessage = 'Student ID not found in database';
+          _errorMessage = 'Unable to find ID: $studentId in the database';
           _isLoading = false;
         });
       }
@@ -81,32 +81,34 @@ class _LoginDialogState extends State<LoginDialog> {
   // Step 2: Validate Last Name
   Future<void> _validateLastName() async {
     String lastName = _lastNameController.text.trim();
-    print('📝 [LoginDialog] Validating last name: "$lastName" for ID: $_validatedStudentId');
-    
+    print(
+      '📝 [LoginDialog] Validating last name: "$lastName" for ID: $_validatedStudentId',
+    );
+
     if (lastName.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter your last name';
       });
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-    
+
     try {
       Map<String, dynamic> result = await _authService.validateLastName(
         _validatedStudentId!,
         lastName,
       );
-      
+
       print('📝 [LoginDialog] Validation result: $result');
       bool isValid = result['success'] ?? false;
-      
+
       if (isValid) {
         print('✅ [LoginDialog] Login successful for: $_validatedStudentId');
-        
+
         if (mounted) {
           Navigator.pop(context, {
             'studentId': _validatedStudentId,
@@ -142,12 +144,12 @@ class _LoginDialogState extends State<LoginDialog> {
 
   @override
   Widget build(BuildContext context) {
-    print('🎨 [LoginDialog] Building with state: isIdValidated=$_isIdValidated, isLoading=$_isLoading');
-    
+    print(
+      '🎨 [LoginDialog] Building with state: isIdValidated=$_isIdValidated, isLoading=$_isLoading',
+    );
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 8,
       child: Container(
         width: 400,
@@ -169,7 +171,7 @@ class _LoginDialogState extends State<LoginDialog> {
                   )
                 else
                   const SizedBox(width: 40),
-                
+
                 Text(
                   _isIdValidated ? 'Verify Last Name' : 'Student Login',
                   style: TextStyle(
@@ -178,7 +180,7 @@ class _LoginDialogState extends State<LoginDialog> {
                     color: Colors.blue.shade900,
                   ),
                 ),
-                
+
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.grey),
                   onPressed: () {
@@ -190,21 +192,18 @@ class _LoginDialogState extends State<LoginDialog> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               _isIdValidated
                   ? 'Please enter your last name to continue'
-                  : 'Enter your Student ID to access the quiz',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+                  : 'Enter your Student ID',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Show error message if any
             if (_errorMessage != null) ...[
               Container(
@@ -229,14 +228,14 @@ class _LoginDialogState extends State<LoginDialog> {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // Step 1: Student ID Field
             if (!_isIdValidated) ...[
               TextField(
                 controller: _studentIdController,
                 decoration: InputDecoration(
-                  labelText: 'Student ID',
-                  hintText: 'e.g., 5250525',
+                  labelText: 'Enter Student ID',
+                  hintText: 'e.g, 123456',
                   prefixIcon: const Icon(Icons.badge, color: Colors.blue),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -251,9 +250,9 @@ class _LoginDialogState extends State<LoginDialog> {
                 autofocus: true,
                 onSubmitted: (_) => _validateStudentId(),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Validate ID Button
               SizedBox(
                 width: double.infinity,
@@ -275,14 +274,11 @@ class _LoginDialogState extends State<LoginDialog> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Continue',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                      : const Text('Continue', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],
-            
+
             // Step 2: Last Name Field
             if (_isIdValidated) ...[
               Container(
@@ -308,14 +304,14 @@ class _LoginDialogState extends State<LoginDialog> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               TextField(
                 controller: _lastNameController,
                 decoration: InputDecoration(
                   labelText: 'Last Name',
-                  hintText: 'e.g., Tan',
+                  hintText: 'e.g., Albit',
                   prefixIcon: const Icon(Icons.person, color: Colors.blue),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -330,9 +326,9 @@ class _LoginDialogState extends State<LoginDialog> {
                 textCapitalization: TextCapitalization.words,
                 onSubmitted: (_) => _validateLastName(),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Validate Last Name Button
               SizedBox(
                 width: double.infinity,
@@ -361,25 +357,25 @@ class _LoginDialogState extends State<LoginDialog> {
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 16),
-            
+
             // Guest mode link (for testing)
-            if (!_isIdValidated)
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    print('👤 [LoginDialog] Guest mode selected');
-                    Navigator.pop(context);
-                    // Navigate to quiz as guest
-                    Navigator.pushNamed(context, '/quiz');
-                  },
-                  child: Text(
-                    'Continue as Guest (Testing Only)',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
-              ),
+            // if (!_isIdValidated)
+            //   Center(
+            //     child: TextButton(
+            //       onPressed: () {
+            //         print('👤 [LoginDialog] Guest mode selected');
+            //         Navigator.pop(context);
+            //         // Navigate to quiz as guest
+            //         Navigator.pushNamed(context, '/quiz');
+            //       },
+            //       child: Text(
+            //         'Continue as Guest (Testing Only)',
+            //         style: TextStyle(color: Colors.grey.shade600),
+            //       ),
+            //     ),
+            //   ),
           ],
         ),
       ),

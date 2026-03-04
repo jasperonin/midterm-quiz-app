@@ -33,6 +33,7 @@ migrate_working_dir/
 /build/
 /coverage/
 lib/firebase_options.dart
+assets/question-quiz.json
 
 # Symbolication related
 app.*.symbols
