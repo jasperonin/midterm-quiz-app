@@ -2,18 +2,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_frame/flutter_web_frame.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import './view/home.dart';
-import 'firebase_options.dart';
+import 'firebase_env_options.dart';
 import './utils/platform_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
 
   try {
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: FirebaseEnvOptions.currentPlatform,
     );
     print('✅ Firebase initialized for monitoring');
   } catch (e) {
@@ -131,7 +133,7 @@ class _LiveMonitoringScreenState extends State<LiveMonitoringScreen> {
 
               rankedStudents.add({
                 'id': doc.id,
-                'lastName': data['last_name'] ?? 'Unknown',
+                'lastName': data['name'] ?? 'Unknown',
                 'firstName': data['first_name'] ?? '',
                 'examStatus': examStatus,
                 'hasTakenExam': hasTakenExam,

@@ -2,9 +2,10 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
-import '../firebase_options.dart';
+import '../firebase_env_options.dart';
 
 class QuestionUploader {
   static Future<void> uploadFromJson() async {
@@ -14,7 +15,7 @@ class QuestionUploader {
     try {
       // Initialize Firebase
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: FirebaseEnvOptions.currentPlatform,
       );
       print('✅ Firebase initialized');
 
@@ -95,5 +96,6 @@ class QuestionUploader {
 // Run this function
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   await QuestionUploader.uploadFromJson();
 }

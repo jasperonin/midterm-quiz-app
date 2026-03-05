@@ -1,8 +1,9 @@
 // lib/scripts/reset_exam_statuses.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/widgets.dart';
-import '../firebase_options.dart';
+import '../firebase_env_options.dart';
 
 class ExamStatusResetter {
   static Future<void> resetAllExamStatuses() async {
@@ -12,7 +13,7 @@ class ExamStatusResetter {
     try {
       // Initialize Firebase
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: FirebaseEnvOptions.currentPlatform,
       );
       print('✅ Firebase initialized');
       
@@ -63,7 +64,7 @@ class ExamStatusResetter {
     
     try {
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: FirebaseEnvOptions.currentPlatform,
       );
       
       final userRef = FirebaseFirestore.instance
@@ -92,6 +93,7 @@ class ExamStatusResetter {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   
   // Check if a specific user ID was passed as argument
   if (args.length > 1 && args[1] == '--user' && args.length > 2) {

@@ -2,12 +2,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'firebase_options.dart'; // Your generated Firebase options
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'firebase_env_options.dart';
 
 void main() async {
   // Initialize Firebase
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await dotenv.load(fileName: '.env');
+  await Firebase.initializeApp(options: FirebaseEnvOptions.currentPlatform);
 
   // Your data as a list of maps
   final List<Map<String, dynamic>> users = [

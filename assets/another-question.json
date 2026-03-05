@@ -1,0 +1,267 @@
+{
+  "questions": [
+    {
+      "id": 41,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nvoid addOne(int x){\n  x = x + 1;\n}\nint main(){\n  int a = 5;\n  addOne(a);\n  printf(\"%d\", a);\n}",
+      "choices": [
+        { "text": "6", "isCorrect": false },
+        { "text": "5", "isCorrect": true },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "0", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 42,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint square(int x){\n  return x*x;\n}\nint main(){\n  printf(\"%d\", square(4));\n}",
+      "choices": [
+        { "text": "8", "isCorrect": false },
+        { "text": "12", "isCorrect": false },
+        { "text": "16", "isCorrect": true },
+        { "text": "4", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 43,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "Which statement about pass-by-value in C is TRUE?",
+      "choices": [
+        { "text": "The original variable is modified", "isCorrect": false },
+        {
+          "text": "A copy of the variable is passed to the function",
+          "isCorrect": true
+        },
+        { "text": "Variables must be global", "isCorrect": false },
+        { "text": "Pointers are always required", "isCorrect": false },
+        { "text": "Functions cannot modify parameters", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 44,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint add(int a,int b){\n return a+b;\n}\nint main(){\n int x = add(3,4);\n printf(\"%d\",x);\n}",
+      "choices": [
+        { "text": "7", "isCorrect": true },
+        { "text": "34", "isCorrect": false },
+        { "text": "12", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "0", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 45,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "How many elements are in this array?\n\nint arr[6];",
+      "choices": [
+        { "text": "5", "isCorrect": false },
+        { "text": "6", "isCorrect": true },
+        { "text": "7", "isCorrect": false },
+        { "text": "Undefined", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 46,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={5,10,15};\n printf(\"%d\",arr[1]);\n}",
+      "choices": [
+        { "text": "5", "isCorrect": false },
+        { "text": "10", "isCorrect": true },
+        { "text": "15", "isCorrect": false },
+        { "text": "1", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 47,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[4]={1,2,3,4};\n printf(\"%d\", arr[0] + arr[3]);\n}",
+      "choices": [
+        { "text": "4", "isCorrect": false },
+        { "text": "5", "isCorrect": true },
+        { "text": "7", "isCorrect": false },
+        { "text": "3", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 48,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint doubleNum(int n){\n return n*2;\n}\nint main(){\n int x = 3;\n printf(\"%d\", doubleNum(x));\n}",
+      "choices": [
+        { "text": "3", "isCorrect": false },
+        { "text": "6", "isCorrect": true },
+        { "text": "9", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 49,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "Which of the following correctly declares a function in C?",
+      "choices": [
+        { "text": "function add()", "isCorrect": false },
+        { "text": "int add(int a,int b);", "isCorrect": true },
+        { "text": "def add(a,b)", "isCorrect": false },
+        { "text": "add(int a,int b)", "isCorrect": false },
+        { "text": "func add()", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 50,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={2,4,6};\n int sum = arr[0]+arr[1]+arr[2];\n printf(\"%d\",sum);\n}",
+      "choices": [
+        { "text": "12", "isCorrect": true },
+        { "text": "10", "isCorrect": false },
+        { "text": "6", "isCorrect": false },
+        { "text": "8", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 51,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint addFive(int x){\n x = x + 5;\n return x;\n}\nint main(){\n int a = 10;\n addFive(a);\n printf(\"%d\",a);\n}",
+      "choices": [
+        { "text": "15", "isCorrect": false },
+        { "text": "10", "isCorrect": true },
+        { "text": "5", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 52,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint multiply(int a,int b){\n return a*b;\n}\nint main(){\n printf(\"%d\", multiply(3,5));\n}",
+      "choices": [
+        { "text": "8", "isCorrect": false },
+        { "text": "15", "isCorrect": true },
+        { "text": "35", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "0", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 53,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "Which index represents the first element of an array?",
+      "choices": [
+        { "text": "0", "isCorrect": true },
+        { "text": "1", "isCorrect": false },
+        { "text": "-1", "isCorrect": false },
+        { "text": "2", "isCorrect": false },
+        { "text": "Depends on compiler", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 54,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={1,2,3};\n for(int i=0;i<3;i++){\n   printf(\"%d\",arr[i]);\n }\n}",
+      "choices": [
+        { "text": "123", "isCorrect": true },
+        { "text": "321", "isCorrect": false },
+        { "text": "012", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "13", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 55,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint inc(int x){\n return ++x;\n}\nint main(){\n int a=4;\n printf(\"%d\", inc(a));\n}",
+      "choices": [
+        { "text": "4", "isCorrect": false },
+        { "text": "5", "isCorrect": true },
+        { "text": "6", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 59,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[4]={1,3,5,7};\n printf(\"%d\", arr[2]);\n}",
+      "choices": [
+        { "text": "5", "isCorrect": true },
+        { "text": "3", "isCorrect": false },
+        { "text": "7", "isCorrect": false },
+        { "text": "1", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 57,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "Which keyword is used to return a value from a function?",
+      "choices": [
+        { "text": "break", "isCorrect": false },
+        { "text": "exit", "isCorrect": false },
+        { "text": "return", "isCorrect": true },
+        { "text": "yield", "isCorrect": false },
+        { "text": "stop", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 58,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What happens if a function is called before it is declared (without prototype)?",
+      "choices": [
+        { "text": "Always works", "isCorrect": false },
+        { "text": "Compilation Error in modern C", "isCorrect": true },
+        { "text": "Runtime Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false },
+        { "text": "Returns 0", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 59,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={3,6,9};\n int i=1;\n printf(\"%d\",arr[i]);\n}",
+      "choices": [
+        { "text": "3", "isCorrect": false },
+        { "text": "6", "isCorrect": true },
+        { "text": "9", "isCorrect": false },
+        { "text": "1", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+    {
+      "id": 60,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint add(int x){\n return x + 2;\n}\nint main(){\n int a=5;\n int b = add(a);\n printf(\"%d\",b);\n}",
+      "choices": [
+        { "text": "5", "isCorrect": false },
+        { "text": "7", "isCorrect": true },
+        { "text": "10", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    }
+  ]
+}

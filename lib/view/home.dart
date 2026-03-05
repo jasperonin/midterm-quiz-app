@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import '../screens/quiz_screen.dart';
 import '../widgets/login_dialog.dart';
-import '../live_monitoring.dart';
 
 class HomeScreen extends StatefulWidget {
   // Changed to StatefulWidget
   const HomeScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -103,45 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // In your home.dart or admin dashboard
-  void _openMonitoring() {
-    // Simple teacher PIN or check if user is teacher
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Teacher Access'),
-        content: const TextField(
-          decoration: InputDecoration(
-            hintText: 'Enter PIN',
-            border: OutlineInputBorder(),
-          ),
-          obscureText: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Simple PIN check (you can change this)
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LiveMonitoringScreen(),
-                ),
-              );
-            },
-            child: const Text('Access'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // lib/home.dart - Update the login button method
-  // lib/home.dart - Update the _showLoginDialog method
   void _showLoginDialog(BuildContext context) {
     print('📱 [HomeScreen] Showing login dialog');
 

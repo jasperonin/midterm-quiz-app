@@ -1,17 +1,41 @@
 // lib/main.dart with loading screen
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_frame/flutter_web_frame.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import './view/home.dart';
-import 'firebase_options.dart';
+import 'firebase_env_options.dart';
 import './utils/platform_utils.dart';
 
-void main() {
-  // Ensure Flutter is ready
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Run app with loading state
+  try {
+    await dotenv.load();
+
+    await Firebase.initializeApp(
+      options: FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_API_KEY']!,
+        appId: dotenv.env['FIREBASE_APP_ID']!,
+        messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
+        projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
+        storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
+      ),
+    );
+
+    // 👇 ENABLE OFFLINE PERSISTENCE
+    // Configure Firestore settings for persistence
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+    );
+
+    print('✅ Firebase offline persistence enabled');
+  } catch (e) {
+    print('❌ Firebase init error: $e');
+  }
+
   runApp(const MyApp());
 }
 
@@ -35,9 +59,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _initializeServices() async {
     try {
       // Initialize Firebase
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await Firebase.initializeApp(options: FirebaseEnvOptions.currentPlatform);
       print('✅ Firebase initialized');
 
       // Initialize SharedPreferences
