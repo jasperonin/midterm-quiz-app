@@ -17,16 +17,11 @@ class QuizScreen extends StatefulWidget {
   final String? studentId;
   final String? studentName;
   final String? quizId;
-  
-  const QuizScreen({
-    Key? key,
-    this.studentId,
-    this.studentName,
-    this.quizId,
-  }) : super(key: key);
+
+  const QuizScreen({super.key, this.studentId, this.studentName, this.quizId});
 
   @override
-  _QuizScreenState createState() => _QuizScreenState();
+  State<QuizScreen> createState() => _QuizScreenState();
 }
 
 class _QuizScreenState extends State<QuizScreen> {
@@ -34,7 +29,7 @@ class _QuizScreenState extends State<QuizScreen> {
   late QuestionService _questionService;
   late ConnectionService _connection;
   late StreamSubscription<bool> _connectionSubscription;
-  
+
   // Quiz data
   List<Map<String, dynamic>> _questions = [];
   List<List<int>> _shuffledChoicesIndices = [];
@@ -45,26 +40,26 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _timeUp = false;
   String? _errorMessage;
   String _quizTitle = '';
-  
+
   // Connection state
   bool _isOffline = false;
   bool _showOfflineBanner = false;
-  
+
   // Timer
   late Timer _timer;
   int _secondsRemaining = 3600; // 1 hour
-  
+
   // Track user answers
   List<int?> _userAnswers = [];
-  
+
   @override
   void initState() {
     super.initState();
-    print('📱 [QuizScreen] Initializing for student: ${widget.studentId}');
-    
+    debugPrint('📱 [QuizScreen] Initializing for student: ${widget.studentId}');
+
     _questionService = QuestionService();
     _connection = ConnectionService();
-    
+
     // Initialize detector with studentId for per-user tab counting
     _detector = TabSwitchDetector(
       studentId: widget.studentId,
@@ -78,148 +73,146 @@ class _QuizScreenState extends State<QuizScreen> {
       },
       onMaxViolationsReached: _terminateQuiz,
     );
-    
+
     _initializeQuiz();
   }
-  
+
   Future<void> _initializeQuiz() async {
     // Initialize connection service
     await _connection.initialize();
-    
+
     // Listen to connection changes
-    _connectionSubscription = _connection.connectionStream.listen((isConnected) {
+    _connectionSubscription = _connection.connectionStream.listen((
+      isConnected,
+    ) {
       if (mounted) {
         setState(() {
           _isOffline = !isConnected;
           _showOfflineBanner = !isConnected;
         });
       }
-      
+
       if (!isConnected) {
         _showOfflineWarning();
       }
     });
-    
+
     // Check exam status before proceeding
     bool canStart = await _canStartExam();
-    
+
     if (!canStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuizDialogs.showExamAlreadyTaken(context);
       });
       return;
     }
-    
+
     // Mark exam as active
     await _setExamStatus('active');
-    
+
     // Load questions
     await _loadQuestions();
   }
-  
+
   Future<bool> _canStartExam() async {
     if (widget.studentId == null) return true; // Guest mode
-    
+
     try {
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.studentId)
           .get(const GetOptions(source: Source.serverAndCache));
-      
+
       if (!userDoc.exists) return true;
-      
+
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
       String examStatus = userData['examStatus'] ?? 'inactive';
       bool hasTakenExam = userData['hasTakenExam'] ?? false;
-      
+
       if (hasTakenExam) {
-        print('🚫 Student ${widget.studentId} has already taken exam');
+        debugPrint('🚫 Student ${widget.studentId} has already taken exam');
         return false;
       }
-      
+
       if (examStatus == 'active') {
-        print('🚫 Student ${widget.studentId} has active exam session');
+        debugPrint('🚫 Student ${widget.studentId} has active exam session');
         return false;
       }
-      
+
       return true;
-      
     } catch (e) {
-      print('❌ Error checking exam status: $e');
-      
+      debugPrint('❌ Error checking exam status: $e');
+
       if (!await _connection.hasInternetConnection()) {
         _showOfflineCheckDialog();
         return false;
       }
-      
+
       return false;
     }
   }
-  
+
   Future<void> _setExamStatus(String status) async {
     if (widget.studentId == null) return;
-    
+
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.studentId)
           .set({
-        'examStatus': status,
-        'lastActive': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      
-      print('📝 Exam status set to: $status for ${widget.studentId}');
+            'examStatus': status,
+            'lastActive': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+      debugPrint('📝 Exam status set to: $status for ${widget.studentId}');
     } catch (e) {
-      print('❌ Error setting exam status: $e');
+      debugPrint('❌ Error setting exam status: $e');
     }
   }
-  
+
   Future<void> _loadQuestions() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-    
+
     try {
-      List<Map<String, dynamic>> questions = await _questionService.getQuizQuestions(
-        count: 20,
-        forceRefresh: false,
-      );
-      
+      List<Map<String, dynamic>> questions = await _questionService
+          .getQuizQuestions(count: 20, forceRefresh: false);
+
       if (mounted) {
         setState(() {
           _questions = questions;
           _isLoading = false;
           _quizTitle = 'C Programming Quiz';
         });
-        
+
         _userAnswers = List<int?>.filled(_questions.length, null);
         _preShuffleChoices();
         _startTimer();
-        
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _detector.startMonitoring();
         });
-        
-        print('✅ Quiz loaded with ${questions.length} questions');
+
+        debugPrint('✅ Quiz loaded with ${questions.length} questions');
       }
-      
     } catch (e) {
-      print('❌ Error loading questions: $e');
-      
+      debugPrint('❌ Error loading questions: $e');
+
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
         });
-        
+
         if (!_connection.isConnected) {
           QuizDialogs.showNoOfflineData(context);
         }
       }
     }
   }
-  
+
   void _preShuffleChoices() {
     _shuffledChoicesIndices = [];
     for (var i = 0; i < _questions.length; i++) {
@@ -229,19 +222,19 @@ class _QuizScreenState extends State<QuizScreen> {
       _shuffledChoicesIndices.add(indices);
     }
   }
-  
+
   List<String> _getCurrentChoices() {
     List<int> shuffledIndices = _shuffledChoicesIndices[_currentQuestionIndex];
     List<dynamic> choices = _questions[_currentQuestionIndex]['choices'] ?? [];
-    return shuffledIndices.map((index) => 
-      choices[index]['text'].toString()
-    ).toList();
+    return shuffledIndices
+        .map((index) => choices[index]['text'].toString())
+        .toList();
   }
-  
+
   int _getOriginalChoiceIndex(int shuffledIndex) {
     return _shuffledChoicesIndices[_currentQuestionIndex][shuffledIndex];
   }
-  
+
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
@@ -257,24 +250,26 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     });
   }
-  
+
   void _answerQuestion(int shuffledChoiceIndex) {
     if (_quizTerminated || _timeUp) return;
-    
+
     int originalIndex = _getOriginalChoiceIndex(shuffledChoiceIndex);
     List<dynamic> choices = _questions[_currentQuestionIndex]['choices'] ?? [];
     bool isCorrect = choices[originalIndex]['isCorrect'] == true;
     int points = _questions[_currentQuestionIndex]['points'] ?? 2;
-    
+
     _userAnswers[_currentQuestionIndex] = originalIndex;
-    
+
     if (isCorrect) {
       setState(() {
         _score += points;
       });
-      print('✅ Correct! +$points points');
+      debugPrint('✅ Correct! +$points points');
+    } else {
+      debugPrint('❌ incorrect');
     }
-    
+
     if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
@@ -283,56 +278,56 @@ class _QuizScreenState extends State<QuizScreen> {
       _completeQuiz();
     }
   }
-  
+
   void _completeQuiz() async {
     _timer.cancel();
     await _detector.resetViolations();
-    
+
     await _setHasTakenExam();
-    
+
     if (widget.studentId != null) {
       await _saveScoreToUserDocument();
     }
-    
+
     if (!mounted) return;
-    
+
     QuizDialogs.showQuizComplete(
-      context, 
-      _score, 
-      40, 
+      context,
+      _score,
+      40,
       _isOffline,
       () => Navigator.popUntil(context, (route) => route.isFirst),
     );
   }
-  
+
   Future<void> _setHasTakenExam() async {
     if (widget.studentId == null) return;
-    
+
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.studentId)
           .set({
-        'hasTakenExam': true,
-        'lastActive': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      
-      print('✅ hasTakenExam set to true for ${widget.studentId}');
+            'hasTakenExam': true,
+            'lastActive': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+      debugPrint('✅ hasTakenExam set to true for ${widget.studentId}');
     } catch (e) {
-      print('❌ Error setting hasTakenExam: $e');
+      debugPrint('❌ Error setting hasTakenExam: $e');
     }
   }
-  
+
   Future<void> _saveScoreToUserDocument() async {
     if (widget.studentId == null) return;
-    
+
     try {
       final userRef = FirebaseFirestore.instance
           .collection('users')
           .doc(widget.studentId);
-      
+
       double percentage = (_score / 40) * 100;
-      
+
       Map<String, dynamic> newScore = {
         'quizId': widget.quizId ?? 'default_quiz',
         'quizTitle': _quizTitle,
@@ -342,14 +337,16 @@ class _QuizScreenState extends State<QuizScreen> {
         'completedAt': DateTime.now().toIso8601String(),
         'timeSpent': 3600 - _secondsRemaining,
       };
-      
-      final userDoc = await userRef.get(const GetOptions(source: Source.serverAndCache));
-      
+
+      final userDoc = await userRef.get(
+        const GetOptions(source: Source.serverAndCache),
+      );
+
       if (userDoc.exists) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
         List<dynamic> existingScores = userData['scores'] ?? [];
         existingScores.add(newScore);
-        
+
         await userRef.set({
           'scores': existingScores,
           'lastActive': FieldValue.serverTimestamp(),
@@ -365,31 +362,30 @@ class _QuizScreenState extends State<QuizScreen> {
           'lastActive': FieldValue.serverTimestamp(),
         });
       }
-      
-      print('✅ Score saved to user document');
-      
+
+      debugPrint('✅ Score saved to user document');
     } catch (e) {
-      print('❌ Error saving score: $e');
+      debugPrint('❌ Error saving score: $e');
     }
   }
-  
+
   void _terminateQuiz() {
     if (_quizTerminated) return;
-    
+
     _timer.cancel();
     _setHasTakenExam();
     _setExamStatus('inactive');
-    
+
     setState(() {
       _quizTerminated = true;
     });
-    
+
     QuizDialogs.showTerminated(context);
   }
-  
+
   void _showOfflineWarning() {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -411,7 +407,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
-  
+
   void _showOfflineCheckDialog() {
     showDialog(
       context: context,
@@ -419,7 +415,7 @@ class _QuizScreenState extends State<QuizScreen> {
         title: const Icon(Icons.cloud_off, color: Colors.orange, size: 48),
         content: const Text(
           'Cannot verify exam status while offline.\n'
-          'Please connect to the internet to continue.'
+          'Please connect to the internet to continue.',
         ),
         actions: [
           TextButton(
@@ -430,7 +426,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _timer.cancel();
@@ -438,7 +434,7 @@ class _QuizScreenState extends State<QuizScreen> {
     _connectionSubscription.cancel();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     // Offline banner
@@ -446,7 +442,7 @@ class _QuizScreenState extends State<QuizScreen> {
       isVisible: _showOfflineBanner,
       hasQuestions: _questions.isNotEmpty,
     );
-    
+
     // Loading state
     if (_isLoading) {
       return Scaffold(
@@ -455,14 +451,16 @@ class _QuizScreenState extends State<QuizScreen> {
             offlineBanner,
             Expanded(
               child: LoadingIndicator(
-                message: _isOffline ? 'Loading from cache...' : 'Loading quiz...',
+                message: _isOffline
+                    ? 'Loading from cache...'
+                    : 'Loading quiz...',
               ),
             ),
           ],
         ),
       );
     }
-    
+
     // Error state
     if (_errorMessage != null) {
       return Scaffold(
@@ -476,11 +474,18 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         'Error loading quiz',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(_errorMessage!),
@@ -498,7 +503,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       );
     }
-    
+
     // Empty state
     if (_questions.isEmpty) {
       return Scaffold(
@@ -526,7 +531,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       );
     }
-    
+
     // Quiz terminated or time up
     if (_quizTerminated || _timeUp) {
       return Scaffold(
@@ -547,13 +552,21 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(height: 20),
               Text(
                 _timeUp ? 'Time\'s Up!' : 'Quiz Terminated',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
-              Text(_timeUp ? 'Your time has expired.' : 'Maximum tab switches exceeded (2)'),
+              Text(
+                _timeUp
+                    ? 'Your time has expired.'
+                    : 'Maximum tab switches exceeded (2)',
+              ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                onPressed: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
                 child: const Text('Return Home'),
               ),
             ],
@@ -561,12 +574,12 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       );
     }
-    
+
     // Main quiz UI
     var currentQ = _questions[_currentQuestionIndex];
     var currentChoices = _getCurrentChoices();
     int remainingQuestions = _questions.length - _currentQuestionIndex - 1;
-    
+
     return Scaffold(
       appBar: QuizAppBar(
         title: _quizTitle,
@@ -595,7 +608,11 @@ class _QuizScreenState extends State<QuizScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.person, color: Colors.blue.shade800, size: 16),
+                          Icon(
+                            Icons.person,
+                            color: Colors.blue.shade800,
+                            size: 16,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -606,27 +623,27 @@ class _QuizScreenState extends State<QuizScreen> {
                         ],
                       ),
                     ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Progress bar
                   QuizProgressBar(
                     progress: (_currentQuestionIndex + 1) / _questions.length,
                     remaining: remainingQuestions,
                     hasViolation: _detector.violationCount >= 1,
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Question card
                   QuestionCard(
                     question: currentQ['question'] ?? '',
                     type: currentQ['type'] ?? 'Question',
                     points: currentQ['points'] ?? 2,
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Choices
                   Expanded(
                     child: ListView.builder(

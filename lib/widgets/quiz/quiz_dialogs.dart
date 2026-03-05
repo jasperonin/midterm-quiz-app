@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class QuizDialogs {
   static void showViolationWarning(BuildContext context, int count) {
     int remaining = 2 - count;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -32,7 +32,7 @@ class QuizDialogs {
             ),
             const SizedBox(height: 8),
             Text(
-              remaining == 1 
+              remaining == 1
                   ? 'One more violation will terminate the quiz!'
                   : 'Please stay on this tab to continue.',
               style: TextStyle(color: Colors.grey[700]),
@@ -50,14 +50,14 @@ class QuizDialogs {
   }
 
   static void showQuizComplete(
-    BuildContext context, 
-    int score, 
-    int total, 
+    BuildContext context,
+    int score,
+    int total,
     bool isOffline,
     VoidCallback onHome,
   ) {
     double percentage = (score / total) * 100;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -71,14 +71,7 @@ class QuizDialogs {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Score: $score / $total',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '${percentage.toStringAsFixed(1)}%',
-              style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-            ),
+
             if (isOffline) ...[
               const SizedBox(height: 8),
               Container(
@@ -103,10 +96,7 @@ class QuizDialogs {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: onHome,
-            child: const Text('Return Home'),
-          ),
+          TextButton(onPressed: onHome, child: const Text('Return Home')),
         ],
       ),
     );
@@ -118,9 +108,9 @@ class QuizDialogs {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Icon(
-          isTimeUp ? Icons.timer_off : Icons.gpp_bad, 
-          color: Colors.red, 
-          size: 48
+          isTimeUp ? Icons.timer_off : Icons.gpp_bad,
+          color: Colors.red,
+          size: 48,
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -131,8 +121,8 @@ class QuizDialogs {
             ),
             const SizedBox(height: 16),
             Text(
-              isTimeUp 
-                  ? 'Your time has expired.' 
+              isTimeUp
+                  ? 'Your time has expired.'
                   : 'You switched tabs too many times.\nYour score will NOT be recorded.',
               textAlign: TextAlign.center,
             ),
@@ -140,7 +130,8 @@ class QuizDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
             child: const Text('Return Home'),
           ),
         ],
@@ -202,7 +193,8 @@ class QuizDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
             child: const Text('Return Home'),
           ),
         ],

@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_frame/flutter_web_frame.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import './view/home.dart';
 import 'firebase_env_options.dart';
-import './utils/platform_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,9 +14,9 @@ void main() async {
     await Firebase.initializeApp(
       options: FirebaseEnvOptions.currentPlatform,
     );
-    print('✅ Firebase initialized for monitoring');
+    debugPrint('✅ Firebase initialized for monitoring');
   } catch (e) {
-    print('❌ Firebase initialization failed: $e');
+    debugPrint('❌ Firebase initialization failed: $e');
   }
 
   runApp(const MonitoringApp());
@@ -127,7 +124,7 @@ class _LiveMonitoringScreenState extends State<LiveMonitoringScreen> {
 
               // 👇 FILTER: Skip students who haven't started
               if (!hasTakenExam && examStatus == 'inactive') {
-                print('⏭️ Skipping ${doc.id} - not started');
+                debugPrint('⏭️ Skipping ${doc.id} - not started');
                 continue; // Skip this student
               }
 
