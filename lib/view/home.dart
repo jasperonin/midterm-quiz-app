@@ -1,26 +1,19 @@
-// lib/home.dart - Complete working version
+// lib/home.dart
+import 'package:app/screens/major_exam/major_exam_screen.dart';
 import 'package:flutter/material.dart';
+import '../models/exam_type.dart';
 import '../screens/quiz_screen.dart';
-import '../widgets/login_dialog.dart';
+import '../widgets/exam_selection/exam_selection_modal.dart';
+import '../widgets/login/login_modal.dart';
 
 class HomeScreen extends StatefulWidget {
-  // Changed to StatefulWidget
   const HomeScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _studentIdController = TextEditingController();
-
-  @override
-  void dispose() {
-    _studentIdController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,8 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 40),
 
+                // Welcome text
                 const Text(
-                  'Midterm Exam',
+                  'Welcome!',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
 
@@ -69,9 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 50),
 
-                // Login Button
+                // Main Login Button
                 ElevatedButton(
-                  onPressed: () => _showLoginDialog(context),
+                  onPressed: () => _showLoginModal(context),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 40,
@@ -93,8 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // Guest mode (working)
               ],
             ),
           ),
@@ -103,39 +95,80 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showLoginDialog(BuildContext context) {
-    print('📱 [HomeScreen] Showing login dialog');
+  // In home.dart, update the _showLoginModal method:
 
+  void _showLoginModal(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return const LoginDialog();
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 8,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
+          child: const LoginModal(),
+        );
       },
     ).then((result) {
-      // Handle the result when dialog closes
-      print('📱 [HomeScreen] Dialog closed with result: $result');
+      // DEBUG: Print the actual result
+      print('🔍 RAW RESULT: $result');
+      print('🔍 RESULT TYPE: ${result.runtimeType}');
 
-      if (result != null && result is Map<String, dynamic>) {
-        String studentId = result['studentId'] ?? '';
-        String lastName = result['lastName'] ?? '';
+      if (result != null) {
+        print('🔍 RESULT KEYS: ${result is Map ? result.keys : 'Not a map'}');
+      }
 
-        print('✅ [HomeScreen] Login successful for: $studentId - $lastName');
+      // Handle login result
+      if (result != null && result is Map) {
+        String studentId = result['studentId']!;
+        String lastName = result['lastName']!;
 
-        // Navigate to quiz screen with student data
-        // After successful login
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => QuizScreen(
-              studentId: studentId,
-              studentName: lastName,
-              // quizId: 'specific-quiz-id', // Optional: load specific quiz
-            ),
-          ),
+        print(
+          '✅ Login successful, showing exam selection for: $studentId - $lastName',
         );
+        _showExamSelectionDialog(studentId, lastName);
       } else {
-        print('📱 [HomeScreen] Dialog closed without login');
+        print('📝 Login cancelled or no result');
+      }
+    });
+  }
+
+  // Show exam selection modal
+  // In home.dart, make sure you have this method
+  void _showExamSelectionDialog(String studentId, String studentName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+          ExamSelectionModal(studentId: studentId, studentName: studentName),
+    ).then((selectedType) {
+      if (selectedType != null) {
+        if (selectedType == ExamType.regularQuiz) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuizScreen(
+                studentId: studentId == 'GUEST' ? null : studentId,
+                studentName: studentName,
+              ),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MajorExamScreen(
+                studentId: studentId,
+                studentName: studentName,
+              ),
+            ),
+          );
+        }
       }
     });
   }
