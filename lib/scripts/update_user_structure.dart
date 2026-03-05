@@ -1,8 +1,9 @@
 // lib/scripts/update_user_structure.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/widgets.dart';
-import '../firebase_options.dart';
+import '../firebase_env_options.dart';
 
 class UserStructureUpdater {
   static Future<void> updateAllUsers() async {
@@ -45,7 +46,7 @@ class UserStructureUpdater {
     try {
       // Initialize Firebase
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: FirebaseEnvOptions.currentPlatform,
       );
       print('✅ Firebase initialized');
 
@@ -117,5 +118,6 @@ class UserStructureUpdater {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   await UserStructureUpdater.updateAllUsers();
 }

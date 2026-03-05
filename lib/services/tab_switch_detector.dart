@@ -1,7 +1,8 @@
-// lib/services/tab_switch_detector.dart - Fixed version
+// lib/services/tab_switch_detector.dart
 import 'dart:js_interop';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 @JS()
 external JSObject get document;
@@ -15,7 +16,7 @@ extension DocumentExtension on JSObject {
   external String get visibilityState;
   
   @JS('addEventListener')
-  external void documentAddEventListener(String type, JSFunction listener);
+  external void addEventListener(String type, JSFunction listener);
   
   @JS('removeEventListener')
   external void documentRemoveEventListener(String type, JSFunction listener);
@@ -24,17 +25,17 @@ extension DocumentExtension on JSObject {
 @JS()
 extension WindowExtension on JSObject {
   @JS('addEventListener')
-  external void addEventListener(String type, JSFunction listener);
+  external void documentAddEventListener(String type, JSFunction listener);
   
   @JS('removeEventListener')
   external void windowRemoveEventListener(String type, JSFunction listener);
 }
 
 class TabSwitchDetector {
-  static const String _violationCountKey = 'tab_switch_violations';
   static const int _maxViolations = 2;
   
-  final Function(int)? onViolation;  // Pass current count
+  final String? studentId; // 👈 Add studentId
+  final Function(int)? onViolation;
   final VoidCallback? onMaxViolationsReached;
   
   int _violationCount = 0;
@@ -42,40 +43,71 @@ class TabSwitchDetector {
   bool _quizActive = false;
   JSFunction? _visibilityHandler;
   JSFunction? _blurHandler;
-  SharedPreferences? _prefs;
+  
+  // Debounce mechanism
+  Timer? _debounceTimer;
+  bool _lastWasVisibilityChange = false;
+  static const int _debounceDuration = 1000;
   
   TabSwitchDetector({
+    required this.studentId, // 👈 Make required
     this.onViolation,
     this.onMaxViolationsReached,
   });
   
-  Future<void> _initPrefs() async {
+  // 👇 NEW: Load count from Firestore
+  Future<void> _loadViolationCount() async {
+    if (studentId == null) return;
+    
     try {
-      _prefs = await SharedPreferences.getInstance();
-      print('✅ SharedPreferences ready');
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentId)
+          .get();
+      
+      if (userDoc.exists) {
+        _violationCount = userDoc.data()?['tabSwitchCount'] ?? 0;
+        print('📊 Loaded tabSwitchCount from Firestore: $_violationCount for $studentId');
+      }
     } catch (e) {
-      print('⚠️ SharedPreferences not available: $e');
+      print('❌ Error loading tabSwitchCount: $e');
+      _violationCount = 0;
+    }
+  }
+  
+  // 👇 NEW: Save count to Firestore
+  Future<void> _saveViolationCount() async {
+    if (studentId == null) return;
+    
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentId)
+          .update({
+        'tabSwitchCount': _violationCount,
+        'lastTabSwitch': FieldValue.serverTimestamp(),
+      });
+      print('💾 Saved tabSwitchCount to Firestore: $_violationCount for $studentId');
+    } catch (e) {
+      print('❌ Error saving tabSwitchCount: $e');
     }
   }
   
   Future<void> startMonitoring() async {
     if (_isMonitoring) return;
     
-    await _initPrefs();
-    
     _isMonitoring = true;
     _quizActive = true;
     
+    // Load from Firestore instead of SharedPreferences
     await _loadViolationCount();
     
-    print('🔍 Tab switch monitoring started');
+    print('🔍 Tab switch monitoring started for student: $studentId');
     print('📊 Current violations: $_violationCount');
     
-    // Create handlers as Dart functions with proper binding
     _visibilityHandler = _handleVisibilityChange.toJS;
     _blurHandler = _handleWindowBlur.toJS;
     
-    // Add listeners
     document.addEventListener('visibilitychange', _visibilityHandler!);
     window.addEventListener('blur', _blurHandler!);
     
@@ -84,6 +116,7 @@ class TabSwitchDetector {
   
   void _handleVisibilityChange() {
     print('👁️ Visibility change triggered');
+    
     if (!_quizActive) {
       print('⏸️ Quiz not active, ignoring');
       return;
@@ -93,8 +126,9 @@ class TabSwitchDetector {
     print('👁️ Visibility state: $visibilityState');
     
     if (visibilityState == 'hidden') {
-      print('🚫 Tab switch detected - user left tab');
-      _handleTabSwitch();
+      print('🚫 User left tab');
+      _lastWasVisibilityChange = true;
+      _debouncedHandleTabSwitch();
     } else if (visibilityState == 'visible') {
       print('👋 User returned to tab');
     }
@@ -102,19 +136,35 @@ class TabSwitchDetector {
   
   void _handleWindowBlur() {
     print('🪟 Window blur triggered');
+    
     if (!_quizActive) return;
     
-    print('🪟 Window lost focus');
-    _handleTabSwitch();
+    if (!_lastWasVisibilityChange) {
+      print('🪟 Window lost focus (separate from tab switch)');
+      _debouncedHandleTabSwitch();
+    } else {
+      print('🪟 Window blur ignored (already counted via visibility)');
+    }
+    
+    _lastWasVisibilityChange = false;
+  }
+  
+  void _debouncedHandleTabSwitch() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(milliseconds: _debounceDuration), () {
+      _handleTabSwitch();
+    });
   }
   
   Future<void> _handleTabSwitch() async {
     if (!_quizActive) return;
     
     _violationCount++;
+    
+    // 👇 Save to Firestore immediately
     await _saveViolationCount();
     
-    print('⚠️ VIOLATION #$_violationCount (Max: $_maxViolations)');
+    print('⚠️ VIOLATION #$_violationCount for student $studentId');
     
     // Trigger violation callback with current count
     if (onViolation != null) {
@@ -125,7 +175,7 @@ class TabSwitchDetector {
     
     // Check if max violations reached
     if (_violationCount >= _maxViolations) {
-      print('❌ MAX VIOLATIONS REACHED - Terminating quiz');
+      print('❌ MAX VIOLATIONS REACHED for student $studentId');
       _quizActive = false;
       
       if (onMaxViolationsReached != null) {
@@ -136,29 +186,12 @@ class TabSwitchDetector {
     }
   }
   
-  Future<void> _loadViolationCount() async {
-    if (_prefs != null) {
-      _violationCount = _prefs!.getInt(_violationCountKey) ?? 0;
-    } else {
-      _violationCount = 0;
-    }
-  }
-  
-  Future<void> _saveViolationCount() async {
-    try {
-      if (_prefs != null) {
-        await _prefs!.setInt(_violationCountKey, _violationCount);
-        print('💾 Saved violation count: $_violationCount');
-      }
-    } catch (e) {
-      print('⚠️ Failed to save violation count: $e');
-    }
-  }
-  
-  void stopMonitoring() {
+  Future<void> stopMonitoring() async {
     if (!_isMonitoring) return;
     
-    print('🛑 Stopping monitoring');
+    print('🛑 Stopping monitoring for student $studentId');
+    
+    _debounceTimer?.cancel();
     
     if (_visibilityHandler != null) {
       document.documentRemoveEventListener('visibilitychange', _visibilityHandler!);
@@ -174,16 +207,12 @@ class TabSwitchDetector {
   
   Future<void> resetViolations() async {
     _violationCount = 0;
+    _debounceTimer?.cancel();
     
-    try {
-      if (_prefs != null) {
-        await _prefs!.remove(_violationCountKey);
-      }
-    } catch (e) {
-      print('⚠️ Failed to reset violations: $e');
-    }
+    // 👇 Reset in Firestore
+    await _saveViolationCount();
     
-    print('🔄 Violations reset');
+    print('🔄 Violations reset for student $studentId');
   }
   
   int get violationCount => _violationCount;
