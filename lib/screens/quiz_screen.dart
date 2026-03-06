@@ -338,34 +338,97 @@ class _QuizScreenState extends State<QuizScreen> {
         'timeSpent': 3600 - _secondsRemaining,
       };
 
+      print('📝 Saving quiz score: $_score/40 for ${widget.studentId}');
+
+      // Get current user data
       final userDoc = await userRef.get(
         const GetOptions(source: Source.serverAndCache),
       );
 
       if (userDoc.exists) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-        List<dynamic> existingScores = userData['scores'] ?? [];
-        existingScores.add(newScore);
 
+        // 👇 FIX: Get existing scores from the new structure
+        Map<String, dynamic>? scores = userData['scores'];
+
+        // Get existing quiz scores array
+        List<dynamic> existingQuizScores = [];
+        if (scores != null && scores['quizScores'] != null) {
+          existingQuizScores = List.from(scores['quizScores']);
+        }
+
+        // Add new score
+        existingQuizScores.add(newScore);
+
+        // Update with new structure
         await userRef.set({
-          'scores': existingScores,
+          'scores': {
+            'quizScores': existingQuizScores,
+            'majorExamScores':
+                scores?['majorExamScores'] ?? {'written': [], 'coding': []},
+          },
           'lastActive': FieldValue.serverTimestamp(),
+          'hasTakenExam': true,
         }, SetOptions(merge: true));
+
+        print('✅ Quiz score saved to scores.quizScores');
+
+        // Update stats (optional but nice)
+        await _updateQuizStats(userRef, existingQuizScores);
       } else {
+        // New user - create with proper structure
         await userRef.set({
           'student_id': widget.studentId,
           'last_name': widget.studentName ?? '',
-          'scores': [newScore],
-          'examStatus': 'active',
+          'scores': {
+            'quizScores': [newScore],
+            'majorExamScores': {'written': [], 'coding': []},
+          },
+          'stats': {
+            'totalQuizzesTaken': 1,
+            'averageQuizScore': percentage,
+            'totalMajorExamsTaken': 0,
+            'averageMajorExamScore': 0.0,
+          },
+          'examStatus': 'inactive',
           'hasTakenExam': true,
+          'tabSwitchCount': 0,
           'createdAt': FieldValue.serverTimestamp(),
           'lastActive': FieldValue.serverTimestamp(),
         });
+
+        print('✅ New user created with quiz score');
+      }
+    } catch (e) {
+      print('❌ Error saving score: $e');
+    }
+  }
+
+  Future<void> _updateQuizStats(
+    DocumentReference userRef,
+    List<dynamic> allScores,
+  ) async {
+    try {
+      if (allScores.isEmpty) return;
+
+      double totalPercentage = 0;
+      for (var score in allScores) {
+        totalPercentage += (score['percentage'] as num?)?.toDouble() ?? 0;
       }
 
-      debugPrint('✅ Score saved to user document');
+      double average = totalPercentage / allScores.length;
+
+      await userRef.set({
+        'stats': {
+          'totalQuizzesTaken': allScores.length,
+          'averageQuizScore': average,
+          // Preserve other stats
+        },
+      }, SetOptions(merge: true));
+
+      print('📊 Updated quiz stats: average = ${average.toStringAsFixed(1)}%');
     } catch (e) {
-      debugPrint('❌ Error saving score: $e');
+      print('⚠️ Failed to update stats: $e');
     }
   }
 
