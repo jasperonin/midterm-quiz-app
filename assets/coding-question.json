@@ -1,0 +1,186 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int square(int n) that returns the square of a number. In main(), read an integer and print the square.",
+      "example_input": "4",
+      "example_output": "16"
+    },
+    {
+      "id": 2,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Create a function int add(int a, int b) that returns the sum of two numbers. In main(), read two integers and print the result.",
+      "example_input": "3 5",
+      "example_output": "8"
+    },
+    {
+      "id": 3,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int isEven(int n) that returns 1 if the number is even and 0 if odd. In main(), read a number and print the result.",
+      "example_input": "6",
+      "example_output": "1"
+    },
+    {
+      "id": 4,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int factorial(int n) that returns the factorial of a number using a loop. In main(), read a number and print the factorial.",
+      "example_input": "5",
+      "example_output": "120"
+    },
+    {
+      "id": 5,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Create a function int sumArray(int arr[], int size) that returns the sum of all elements in an array. In main(), read 5 integers into an array and print the total sum.",
+      "example_input": "1 2 3 4 5",
+      "example_output": "15"
+    },
+    {
+      "id": 6,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int max(int a, int b) that returns the larger number. In main(), read two integers and print the maximum.",
+      "example_input": "7 10",
+      "example_output": "10"
+    },
+    {
+      "id": 7,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int countPositive(int arr[], int size) that counts how many numbers in the array are greater than zero. In main(), read 5 integers and print the count.",
+      "example_input": "1 -2 3 4 -1",
+      "example_output": "3"
+    },
+
+    {
+      "id": 8,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function float average(int arr[], int size) that returns the average of array elements. In main(), read 4 numbers and print the average.",
+      "example_input": "2 4 6 8",
+      "example_output": "5.0"
+    },
+    {
+      "id": 9,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int power(int base, int exp) that calculates base raised to exp using a loop. In main(), read base and exponent and print the result.",
+      "example_input": "2 3",
+      "example_output": "8"
+    },
+    {
+      "id": 10,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int reverseNumber(int n) that returns the reversed digits of a number. In main(), read a number and print the reversed number.",
+      "example_input": "1234",
+      "example_output": "4321"
+    },
+    {
+      "id": 11,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int multiply(int a, int b) that multiplies two numbers using repeated addition. In main(), read two numbers and print the result.",
+      "example_input": "4 3",
+      "example_output": "12"
+    },
+    {
+      "id": 12,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int sumEven(int arr[], int size) that returns the sum of all even numbers in an array. In main(), read 5 integers and print the sum.",
+      "example_input": "1 2 3 4 5",
+      "example_output": "6"
+    },
+    {
+      "id": 13,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int digits(int n) that returns the number of digits in an integer. In main(), read a number and print the digit count.",
+      "example_input": "4821",
+      "example_output": "4"
+    },
+    {
+      "id": 14,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int minArray(int arr[], int size) that returns the smallest value in the array. In main(), read 5 integers and print the smallest number.",
+      "example_input": "7 2 9 4 1",
+      "example_output": "1"
+    },
+
+    {
+      "id": 15,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int sumDigits(int n) that returns the sum of digits of a number. In main(), read an integer and print the result.",
+      "example_input": "123",
+      "example_output": "6"
+    },
+    {
+      "id": 16,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int countEven(int arr[], int size) that counts how many even numbers exist in the array. In main(), read 6 integers and print the count.",
+      "example_input": "1 2 4 7 8 9",
+      "example_output": "3"
+    },
+    {
+      "id": 17,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int fibonacci(int n) that returns the nth Fibonacci number using a loop. In main(), read n and print the result.",
+      "example_input": "7",
+      "example_output": "13"
+    },
+    {
+      "id": 18,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int countGreater(int arr[], int size, int value) that counts numbers greater than a given value. In main(), read 5 integers and a comparison value, then print the count.",
+      "example_input": "1 5 7 3 9\n4",
+      "example_output": "3"
+    },
+    {
+      "id": 19,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int gcd(int a, int b) that returns the greatest common divisor of two numbers using a loop. In main(), read two numbers and print the GCD.",
+      "example_input": "12 18",
+      "example_output": "6"
+    },
+    {
+      "id": 20,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int sumOdd(int arr[], int size) that returns the sum of odd numbers in an array. In main(), read 5 integers and print the sum.",
+      "example_input": "1 2 3 4 5",
+      "example_output": "9"
+    }
+  ]
+}

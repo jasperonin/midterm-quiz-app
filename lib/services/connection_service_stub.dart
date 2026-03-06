@@ -6,7 +6,6 @@ class ConnectionService {
   ConnectionService._internal();
 
   bool _hasInternet = true;
-  bool _isInitialized = false;
 
   Stream<bool> get connectionStream => 
       Stream<bool>.periodic(const Duration(seconds: 10), (_) => true).distinct();
@@ -15,7 +14,6 @@ class ConnectionService {
 
   Future<void> initialize() async {
     _hasInternet = true;
-    _isInitialized = true;
     print('🌐 Running on web - connection checks disabled');
   }
 
