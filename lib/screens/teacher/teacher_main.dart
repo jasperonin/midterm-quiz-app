@@ -35,19 +35,28 @@ class TeacherApp extends StatelessWidget {
         builder: (context) {
           return MaterialApp(
             title: 'Teacher Dashboard',
-            theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+            theme: ThemeData(
+              primarySwatch: Colors.teal,
+              useMaterial3: true,
+              fontFamily: 'Roboto',
+            ),
             home: const TeacherDashboard(),
             debugShowCheckedModeBanner: false,
           );
         },
-        maximumSize: const Size(400, 830),
+        // 👇 REMOVED the 400×830 constraint - now uses full browser width
+        maximumSize: const Size(double.infinity, double.infinity),
         backgroundColor: Colors.grey.shade300,
         enabled: true,
       );
     } else {
       return MaterialApp(
         title: 'Teacher Dashboard',
-        theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+        theme: ThemeData(
+          primarySwatch: Colors.teal,
+          useMaterial3: true,
+          fontFamily: 'Roboto',
+        ),
         home: const TeacherDashboard(),
         debugShowCheckedModeBanner: false,
       );

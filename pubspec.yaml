@@ -43,6 +43,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   internet_connection_checker: ^1.0.0+1
   js: ^0.6.7
+  firebase_auth: ^6.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,12 +1,15 @@
 // lib/screens/quiz_screen.dart
+import 'package:app/services/question_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../services/tab_switch_detector.dart';
-import '../services/question_service.dart';
+import '../services/session_service.dart';
 import '../services/connection_service.dart';
+import '../models/quiz_data.dart';
+import '../models/active_session.dart';
 import '../widgets/quiz/offline_banner.dart';
-import '../widgets/quiz/quiz_app_bar.dart';
+import '../widgets/quiz/quiz_app_bar.dart'; // Import the app bar
 import '../widgets/quiz/quiz_progress_bar.dart';
 import '../widgets/quiz/question_card.dart';
 import '../widgets/quiz/choice_button.dart';
@@ -26,12 +29,15 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   late TabSwitchDetector _detector;
-  late QuestionService _questionService;
+  late QuizService _quizService;
+  late SessionService _sessionService;
   late ConnectionService _connection;
   late StreamSubscription<bool> _connectionSubscription;
 
   // Quiz data
-  List<Map<String, dynamic>> _questions = [];
+  QuizData? _quizData;
+  List<Question> get _questions => _quizData?.questions ?? [];
+
   List<List<int>> _shuffledChoicesIndices = [];
   int _currentQuestionIndex = 0;
   int _score = 0;
@@ -39,25 +45,32 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _quizTerminated = false;
   bool _timeUp = false;
   String? _errorMessage;
-  String _quizTitle = '';
+
+  // Session management
+  String? _sessionId;
+  ActiveSession? _currentSession;
+  bool _isResuming = false;
 
   // Connection state
   bool _isOffline = false;
   bool _showOfflineBanner = false;
 
   // Timer
-  late Timer _timer;
-  int _secondsRemaining = 3600; // 1 hour
+  Timer? _timer;
+  int _secondsRemaining = 1800; // 30 minutes default
+  int? _questionStartTime;
 
-  // Track user answers
-  List<int?> _userAnswers = [];
+  // Track user answers locally for UI
+  Map<int, int> _userAnswers = {}; // questionIndex -> selectedOptionIndex
+  Map<int, bool> _answerResults = {}; // questionIndex -> isCorrect
 
   @override
   void initState() {
     super.initState();
     debugPrint('📱 [QuizScreen] Initializing for student: ${widget.studentId}');
 
-    _questionService = QuestionService();
+    _quizService = QuizService();
+    _sessionService = SessionService();
     _connection = ConnectionService();
 
     // Initialize detector with studentId for per-user tab counting
@@ -97,9 +110,17 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     });
 
+    // Check if we have a quizId
+    if (widget.quizId == null) {
+      setState(() {
+        _errorMessage = 'No quiz ID provided';
+        _isLoading = false;
+      });
+      return;
+    }
+
     // Check exam status before proceeding
     bool canStart = await _canStartExam();
-
     if (!canStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuizDialogs.showExamAlreadyTaken(context);
@@ -107,11 +128,8 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
-    // Mark exam as active
-    await _setExamStatus('active');
-
-    // Load questions
-    await _loadQuestions();
+    // Validate and start quiz session
+    await _startQuizSession();
   }
 
   Future<bool> _canStartExam() async {
@@ -152,90 +170,156 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> _setExamStatus(String status) async {
-    if (widget.studentId == null) return;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.studentId)
-          .set({
-            'examStatus': status,
-            'lastActive': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-
-      debugPrint('📝 Exam status set to: $status for ${widget.studentId}');
-    } catch (e) {
-      debugPrint('❌ Error setting exam status: $e');
-    }
-  }
-
-  Future<void> _loadQuestions() async {
+  Future<void> _startQuizSession() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      List<Map<String, dynamic>> questions = await _questionService
-          .getQuizQuestions(count: 20, forceRefresh: false);
+      debugPrint('🎯 Starting quiz session for student: ${widget.studentId}');
+      debugPrint('📋 Quiz ID being used: ${widget.quizId}');
 
-      if (mounted) {
+      if (widget.quizId == null) {
         setState(() {
-          _questions = questions;
+          _errorMessage = 'Quiz ID is null';
           _isLoading = false;
-          _quizTitle = 'C Programming Quiz';
+        });
+        return;
+      }
+
+      final result = await _quizService.validateAndStartQuiz(
+        userId: widget.studentId ?? 'GUEST',
+        quizId: widget.quizId!,
+        examId: null,
+      );
+
+      if (!mounted) return;
+
+      debugPrint(
+        '📊 Quiz start result: success=${result.success}, error=${result.error}',
+      );
+
+      if (result.success) {
+        setState(() {
+          _quizData = result.quizData;
+          _sessionId = result.sessionId;
+          _isLoading = false;
+
+          if (result.existingSession == true) {
+            _isResuming = true;
+            _currentQuestionIndex = result.lastQuestionIndex ?? 0;
+
+            // Load saved answers
+            if (result.savedAnswers != null) {
+              for (var answer in result.savedAnswers!) {
+                final qIndex = answer['questionIndex'] as int;
+                final selected = answer['selectedOption'] as int;
+                final isCorrect = answer['isCorrect'] as bool;
+
+                _userAnswers[qIndex] = selected;
+                _answerResults[qIndex] = isCorrect;
+
+                // Update score
+                if (isCorrect) {
+                  _score += _getQuestionPoints(qIndex);
+                }
+              }
+            }
+          }
         });
 
-        _userAnswers = List<int?>.filled(_questions.length, null);
+        // Set time limit from quiz data
+        if (_quizData?.timeLimit != null) {
+          setState(() {
+            _secondsRemaining = _quizData!.timeLimit! * 60;
+          });
+        }
+
+        // Prepare shuffled choices
         _preShuffleChoices();
+
+        // Start timer
         _startTimer();
 
+        // Start monitoring
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _detector.startMonitoring();
         });
 
-        debugPrint('✅ Quiz loaded with ${questions.length} questions');
-      }
-    } catch (e) {
-      debugPrint('❌ Error loading questions: $e');
+        // Show resume dialog if needed
+        if (_isResuming) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            QuizDialogs.showResumeDialog(
+              context,
+              _currentQuestionIndex + 1,
+              _questions.length,
+              () async {
+                // Start Over
+                if (_sessionId != null) {
+                  await _quizService.abandonQuizSession(_sessionId!);
+                }
+                _startQuizSession();
+              },
+              () {},
+            );
+          });
+        }
 
-      if (mounted) {
+        debugPrint('✅ Quiz session started: $_sessionId');
+      } else {
+        debugPrint('❌ Failed to start quiz: ${result.error}');
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = result.error ?? 'Failed to start quiz';
           _isLoading = false;
         });
-
-        if (!_connection.isConnected) {
-          QuizDialogs.showNoOfflineData(context);
-        }
       }
+    } catch (e) {
+      debugPrint('❌ Error starting quiz: $e');
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
     }
+  }
+
+  int _getQuestionPoints(int index) {
+    if (_quizData != null && index < _quizData!.questions.length) {
+      return _quizData!.questions[index].points;
+    }
+    return 2; // Default fallback
   }
 
   void _preShuffleChoices() {
     _shuffledChoicesIndices = [];
     for (var i = 0; i < _questions.length; i++) {
-      List<dynamic> choices = _questions[i]['choices'] ?? [];
-      List<int> indices = List.generate(choices.length, (index) => index);
+      final question = _questions[i];
+      List<int> indices = List.generate(
+        question.options.length,
+        (index) => index,
+      );
       indices.shuffle();
       _shuffledChoicesIndices.add(indices);
     }
   }
 
   List<String> _getCurrentChoices() {
+    if (_currentQuestionIndex >= _questions.length) return [];
+
     List<int> shuffledIndices = _shuffledChoicesIndices[_currentQuestionIndex];
-    List<dynamic> choices = _questions[_currentQuestionIndex]['choices'] ?? [];
-    return shuffledIndices
-        .map((index) => choices[index]['text'].toString())
-        .toList();
+    final question = _questions[_currentQuestionIndex];
+    return shuffledIndices.map((index) => question.options[index]).toList();
   }
 
   int _getOriginalChoiceIndex(int shuffledIndex) {
+    if (_currentQuestionIndex >= _shuffledChoicesIndices.length)
+      return shuffledIndex;
     return _shuffledChoicesIndices[_currentQuestionIndex][shuffledIndex];
   }
 
   void _startTimer() {
+    _questionStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
         if (mounted) {
@@ -245,205 +329,124 @@ class _QuizScreenState extends State<QuizScreen> {
         }
       } else {
         _timeUp = true;
-        _timer.cancel();
+        _timer?.cancel();
         QuizDialogs.showTerminated(context, isTimeUp: true);
       }
     });
   }
 
-  void _answerQuestion(int shuffledChoiceIndex) {
-    if (_quizTerminated || _timeUp) return;
+  Future<void> _answerQuestion(int shuffledChoiceIndex) async {
+    if (_quizTerminated || _timeUp || _sessionId == null) return;
+
+    // Check if question already answered
+    if (_userAnswers.containsKey(_currentQuestionIndex)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have already answered this question'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Calculate time spent
+    final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final timeSpent = _questionStartTime != null
+        ? currentTime - _questionStartTime!
+        : 0;
 
     int originalIndex = _getOriginalChoiceIndex(shuffledChoiceIndex);
-    List<dynamic> choices = _questions[_currentQuestionIndex]['choices'] ?? [];
-    bool isCorrect = choices[originalIndex]['isCorrect'] == true;
-    int points = _questions[_currentQuestionIndex]['points'] ?? 2;
 
-    _userAnswers[_currentQuestionIndex] = originalIndex;
-
-    if (isCorrect) {
-      setState(() {
-        _score += points;
-      });
-      debugPrint('✅ Correct! +$points points');
-    } else {
-      debugPrint('❌ incorrect');
-    }
-
-    if (_currentQuestionIndex < _questions.length - 1) {
-      setState(() {
-        _currentQuestionIndex++;
-      });
-    } else {
-      _completeQuiz();
-    }
-  }
-
-  void _completeQuiz() async {
-    _timer.cancel();
-    await _detector.resetViolations();
-
-    await _setHasTakenExam();
-
-    if (widget.studentId != null) {
-      await _saveScoreToUserDocument();
-    }
+    // Submit answer to server
+    final result = await _quizService.submitAnswer(
+      sessionId: _sessionId!,
+      questionIndex: _currentQuestionIndex,
+      selectedOptionIndex: originalIndex,
+      timeSpentSeconds: timeSpent,
+    );
 
     if (!mounted) return;
 
+    if (result.success) {
+      // Update local state
+      setState(() {
+        _userAnswers[_currentQuestionIndex] = originalIndex;
+        _answerResults[_currentQuestionIndex] = result.isCorrect ?? false;
+
+        if (result.isCorrect == true) {
+          _score += _getQuestionPoints(_currentQuestionIndex);
+        }
+      });
+
+      // Move to next question or complete
+      if (result.isCompleted == true) {
+        _completeQuiz();
+      } else if (result.nextQuestionIndex != null) {
+        setState(() {
+          _currentQuestionIndex = result.nextQuestionIndex!;
+          _questionStartTime = currentTime;
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to submit answer'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _completeQuiz() async {
+    _timer?.cancel();
+    await _detector.resetViolations();
+
+    // Get results
+    final results = await _quizService.getQuizResults(_sessionId!);
+
+    if (!mounted) return;
+
+    // Show completion dialog
     QuizDialogs.showQuizComplete(
       context,
       _score,
-      40,
+      _questions.length * 2,
       _isOffline,
       () => Navigator.popUntil(context, (route) => route.isFirst),
+      results: results,
     );
-  }
-
-  Future<void> _setHasTakenExam() async {
-    if (widget.studentId == null) return;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.studentId)
-          .set({
-            'hasTakenExam': true,
-            'lastActive': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-
-      debugPrint('✅ hasTakenExam set to true for ${widget.studentId}');
-    } catch (e) {
-      debugPrint('❌ Error setting hasTakenExam: $e');
-    }
-  }
-
-  Future<void> _saveScoreToUserDocument() async {
-    if (widget.studentId == null) return;
-
-    try {
-      final userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.studentId);
-
-      double percentage = (_score / 40) * 100;
-
-      Map<String, dynamic> newScore = {
-        'quizId': widget.quizId ?? 'default_quiz',
-        'quizTitle': _quizTitle,
-        'score': _score,
-        'totalPoints': 40,
-        'percentage': double.parse(percentage.toStringAsFixed(1)),
-        'completedAt': DateTime.now().toIso8601String(),
-        'timeSpent': 3600 - _secondsRemaining,
-      };
-
-      print('📝 Saving quiz score: $_score/40 for ${widget.studentId}');
-
-      // Get current user data
-      final userDoc = await userRef.get(
-        const GetOptions(source: Source.serverAndCache),
-      );
-
-      if (userDoc.exists) {
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-        // 👇 FIX: Get existing scores from the new structure
-        Map<String, dynamic>? scores = userData['scores'];
-
-        // Get existing quiz scores array
-        List<dynamic> existingQuizScores = [];
-        if (scores != null && scores['quizScores'] != null) {
-          existingQuizScores = List.from(scores['quizScores']);
-        }
-
-        // Add new score
-        existingQuizScores.add(newScore);
-
-        // Update with new structure
-        await userRef.set({
-          'scores': {
-            'quizScores': existingQuizScores,
-            'majorExamScores':
-                scores?['majorExamScores'] ?? {'written': [], 'coding': []},
-          },
-          'lastActive': FieldValue.serverTimestamp(),
-          'hasTakenExam': true,
-        }, SetOptions(merge: true));
-
-        print('✅ Quiz score saved to scores.quizScores');
-
-        // Update stats (optional but nice)
-        await _updateQuizStats(userRef, existingQuizScores);
-      } else {
-        // New user - create with proper structure
-        await userRef.set({
-          'student_id': widget.studentId,
-          'last_name': widget.studentName ?? '',
-          'scores': {
-            'quizScores': [newScore],
-            'majorExamScores': {'written': [], 'coding': []},
-          },
-          'stats': {
-            'totalQuizzesTaken': 1,
-            'averageQuizScore': percentage,
-            'totalMajorExamsTaken': 0,
-            'averageMajorExamScore': 0.0,
-          },
-          'examStatus': 'inactive',
-          'hasTakenExam': true,
-          'tabSwitchCount': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'lastActive': FieldValue.serverTimestamp(),
-        });
-
-        print('✅ New user created with quiz score');
-      }
-    } catch (e) {
-      print('❌ Error saving score: $e');
-    }
-  }
-
-  Future<void> _updateQuizStats(
-    DocumentReference userRef,
-    List<dynamic> allScores,
-  ) async {
-    try {
-      if (allScores.isEmpty) return;
-
-      double totalPercentage = 0;
-      for (var score in allScores) {
-        totalPercentage += (score['percentage'] as num?)?.toDouble() ?? 0;
-      }
-
-      double average = totalPercentage / allScores.length;
-
-      await userRef.set({
-        'stats': {
-          'totalQuizzesTaken': allScores.length,
-          'averageQuizScore': average,
-          // Preserve other stats
-        },
-      }, SetOptions(merge: true));
-
-      print('📊 Updated quiz stats: average = ${average.toStringAsFixed(1)}%');
-    } catch (e) {
-      print('⚠️ Failed to update stats: $e');
-    }
   }
 
   void _terminateQuiz() {
     if (_quizTerminated) return;
 
-    _timer.cancel();
-    _setHasTakenExam();
-    _setExamStatus('inactive');
+    _timer?.cancel();
+
+    // Abandon session
+    if (_sessionId != null) {
+      _quizService.abandonQuizSession(_sessionId!);
+    }
 
     setState(() {
       _quizTerminated = true;
     });
 
     QuizDialogs.showTerminated(context);
+  }
+
+  Future<void> _handlePauseQuiz() async {
+    final shouldPause = await QuizDialogs.showPauseConfirmation(context);
+
+    if (shouldPause == true && _sessionId != null) {
+      final success = await _quizService.pauseQuizSession(_sessionId!);
+      if (success && mounted) {
+        _timer?.cancel();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Quiz paused')));
+      }
+    }
   }
 
   void _showOfflineWarning() {
@@ -492,7 +495,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _detector.stopMonitoring();
     _connectionSubscription.cancel();
     super.dispose();
@@ -554,7 +557,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       Text(_errorMessage!),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _loadQuestions,
+                        onPressed: _startQuizSession,
                         child: const Text('Retry'),
                       ),
                     ],
@@ -639,92 +642,126 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     // Main quiz UI
-    var currentQ = _questions[_currentQuestionIndex];
-    var currentChoices = _getCurrentChoices();
+    if (_currentQuestionIndex >= _questions.length) {
+      return const Scaffold(body: Center(child: Text('Quiz completed!')));
+    }
+
+    final currentQuestion = _questions[_currentQuestionIndex];
+    final currentChoices = _getCurrentChoices();
+    final hasAnswered = _userAnswers.containsKey(_currentQuestionIndex);
     int remainingQuestions = _questions.length - _currentQuestionIndex - 1;
 
-    return Scaffold(
-      appBar: QuizAppBar(
-        title: _quizTitle,
-        currentIndex: _currentQuestionIndex,
-        totalQuestions: _questions.length,
-        timeRemaining: _secondsRemaining,
-        isOffline: _isOffline,
-        violationCount: _detector.violationCount,
-      ),
-      body: Column(
-        children: [
-          offlineBanner,
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Student info
-                  if (widget.studentId != null)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.person,
-                            color: Colors.blue.shade800,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${widget.studentName ?? 'Student'}: ${widget.studentId}',
-                              style: TextStyle(color: Colors.blue.shade800),
+    return WillPopScope(
+      onWillPop: () async {
+        _handlePauseQuiz();
+        return false;
+      },
+      child: Scaffold(
+        appBar: QuizAppBar(
+          title: _quizData?.title ?? 'Quiz',
+          currentIndex: _currentQuestionIndex,
+          totalQuestions: _questions.length,
+          timeRemaining: _secondsRemaining,
+          isOffline: _isOffline,
+          violationCount: _detector.violationCount,
+          onPause: _handlePauseQuiz,
+        ),
+        body: Column(
+          children: [
+            offlineBanner,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Student info
+                    if (widget.studentId != null)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.person,
+                              color: Colors.blue.shade800,
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${widget.studentName ?? 'Student'}: ${widget.studentId}',
+                                style: TextStyle(color: Colors.blue.shade800),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 20),
+
+                    // Progress bar
+                    QuizProgressBar(
+                      progress:
+                          (_currentQuestionIndex + 1) /
+                          _questions.length, // This will be /20
+                      remaining: _questions.length - _currentQuestionIndex - 1,
+                      hasViolation: _detector.violationCount >= 1,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Question card
+                    QuestionCard(
+                      question: currentQuestion.text,
+                      type: 'Question',
+                      points: _getQuestionPoints(_currentQuestionIndex),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Choices
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: currentChoices.length,
+                        itemBuilder: (context, index) {
+                          final originalIndex = _getOriginalChoiceIndex(index);
+                          final isSelected =
+                              _userAnswers[_currentQuestionIndex] ==
+                              originalIndex;
+                          final isCorrect =
+                              _answerResults[_currentQuestionIndex];
+
+                          Color? customColor;
+                          if (hasAnswered) {
+                            if (isSelected) {
+                              customColor = isCorrect == true
+                                  ? Colors.green.shade100
+                                  : Colors.red.shade100;
+                            }
+                          }
+
+                          return ChoiceButton(
+                            text: currentChoices[index],
+                            index: index,
+                            isSelected: isSelected,
+                            customColor: customColor,
+                            onTap: hasAnswered
+                                ? null
+                                : () => _answerQuestion(index),
+                          );
+                        },
                       ),
                     ),
-
-                  const SizedBox(height: 20),
-
-                  // Progress bar
-                  QuizProgressBar(
-                    progress: (_currentQuestionIndex + 1) / _questions.length,
-                    remaining: remainingQuestions,
-                    hasViolation: _detector.violationCount >= 1,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Question card
-                  QuestionCard(
-                    question: currentQ['question'] ?? '',
-                    type: currentQ['type'] ?? 'Question',
-                    points: currentQ['points'] ?? 2,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Choices
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: currentChoices.length,
-                      itemBuilder: (context, index) {
-                        return ChoiceButton(
-                          text: currentChoices[index],
-                          index: index,
-                          onTap: () => _answerQuestion(index),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

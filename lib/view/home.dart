@@ -1,8 +1,8 @@
-// lib/home.dart
+// lib/view/home.dart
 import 'package:app/screens/major_exam/major_exam_screen.dart';
 import 'package:flutter/material.dart';
 import '../models/exam_type.dart';
-import '../screens/quiz_screen.dart';
+import 'package:app/screens/quiz_screen.dart'; // FIXED: Changed from ../screens/quiz_screen.dart
 import '../widgets/exam_selection/exam_selection_modal.dart';
 import '../widgets/login/login_modal.dart';
 
@@ -14,6 +14,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Default quiz ID - you should replace this with an actual quiz ID from Firebase
+  static const String defaultQuizId = '6jwCRFs2skwK13S4LQyq';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,8 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // In home.dart, update the _showLoginModal method:
-
   void _showLoginModal(BuildContext context) {
     showDialog(
       context: context,
@@ -139,7 +140,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Show exam selection modal
-  // In home.dart, make sure you have this method
   void _showExamSelectionDialog(String studentId, String studentName) {
     showDialog(
       context: context,
@@ -149,15 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
     ).then((selectedType) {
       if (selectedType != null) {
         if (selectedType == ExamType.regularQuiz) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => QuizScreen(
-                studentId: studentId == 'GUEST' ? null : studentId,
-                studentName: studentName,
-              ),
-            ),
-          );
+          // For regular quiz, we need to pass a quizId
+          _navigateToQuiz(studentId, studentName);
         } else {
           Navigator.push(
             context,
@@ -171,5 +164,23 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     });
+  }
+
+  // Method to handle quiz navigation
+  void _navigateToQuiz(String studentId, String studentName) {
+    debugPrint(
+      '🎯 Navigating to quiz with ID: $defaultQuizId for student: $studentId',
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(
+          studentId: studentId == 'GUEST' ? null : studentId,
+          studentName: studentName,
+          quizId: defaultQuizId,
+        ),
+      ),
+    );
   }
 }

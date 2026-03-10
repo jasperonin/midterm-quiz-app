@@ -16,7 +16,7 @@ class QuizAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.totalQuestions,
     required this.timeRemaining,
     required this.isOffline,
-    required this.violationCount,
+    required this.violationCount, required Future<dynamic> Function() onPause,
   }) : super(key: key);
 
   String _formatTime(int seconds) {
