@@ -12,10 +12,10 @@ class MajorExamScreen extends StatefulWidget {
   final String studentName;
 
   const MajorExamScreen({
-    Key? key,
+    super.key,
     required this.studentId,
     required this.studentName,
-  }) : super(key: key);
+  });
 
   @override
   _MajorExamScreenState createState() => _MajorExamScreenState();
@@ -25,12 +25,12 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
   late MajorExamService _examService;
   late TabSwitchDetector _writtenDetector;
   late ConnectionService _connection;
-  
+
   // UI State
   bool _isLoading = true;
   ExamResumeStatus? _resumeStatus;
   String? _errorMessage;
-  
+
   // Exam state
   int _currentSection = 0; // 0 = Written, 1 = Coding
   int _writtenScore = 0;
@@ -43,50 +43,67 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
     _examService = MajorExamService(studentId: widget.studentId);
     _connection = ConnectionService();
     _connection.initialize();
-    
+
     _initializeExam();
   }
-  
+
   Future<void> _initializeExam() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      // Check where the student should be
+      // 🔒 NEW: Check exam date first
+      bool canAccess = await _canAccessExam();
+
+      if (!canAccess) {
+        // Get exam date for error message
+        final examDoc = await FirebaseFirestore.instance
+            .collection('majorExam')
+            .doc('settings') // Adjust this path to match your DB structure
+            .get();
+
+        final examDate =
+            (examDoc.data()?['examDate'] as Timestamp?)?.toDate() ??
+            DateTime.now();
+
+        if (mounted) {
+          _showDateErrorDialog(examDate);
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Exam not available yet';
+          });
+        }
+        return;
+      }
+
+      // ✅ Existing resume logic continues here
       _resumeStatus = await _examService.checkExamStatus();
-      
+
       print('📋 Exam resume status: $_resumeStatus');
-      
+
       switch (_resumeStatus) {
         case ExamResumeStatus.completed:
-          // Show already completed message
           setState(() {
             _isLoading = false;
             _errorMessage = 'You have already completed this exam.';
           });
           break;
-          
+
         case ExamResumeStatus.resumeCoding:
-          // Skip to coding section
           setState(() {
             _currentSection = 1;
-            _writtenCompleted = true; // Mark written as completed
+            _writtenCompleted = true;
             _isLoading = false;
           });
-          
-          // Initialize coding section (no tab detector needed)
           await _examService.startCodingSection();
           break;
-          
+
         case ExamResumeStatus.startWritten:
         case ExamResumeStatus.newExam:
-          // Start fresh with written section
           _initializeWrittenSection();
           break;
         case null:
-          // TODO: Handle this case.
           throw UnimplementedError();
       }
-      
     } catch (e) {
       setState(() {
         _errorMessage = 'Error initializing exam: $e';
@@ -94,7 +111,81 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
       });
     }
   }
-  
+
+  // In major_exam_screen.dart, add this check before allowing access
+
+  // 🔒 Date check method
+  Future<bool> _canAccessExam() async {
+    try {
+      final examDoc = await FirebaseFirestore.instance
+          .collection('majorExam')
+          .doc('settings')
+          .get();
+
+      if (!examDoc.exists) {
+        // If no settings document, default to allowing access
+        return true;
+      }
+
+      final examDate = (examDoc.data()?['examDate'] as Timestamp?)?.toDate();
+
+      // If no exam date set, allow access
+      if (examDate == null) return true;
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final examDay = DateTime(examDate.year, examDate.month, examDate.day);
+
+      // Allow access if today is on or after exam date
+      return today.isAfter(examDay) || today.isAtSameMomentAs(examDay);
+    } catch (e) {
+      print('❌ Error checking exam date: $e');
+      // On error, block access to be safe
+      return false;
+    }
+  }
+
+  // 📢 Date error dialog
+  void _showDateErrorDialog(DateTime examDate) {
+    final formattedDate = '${examDate.month}/${examDate.day}/${examDate.year}';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Icon(Icons.lock_clock, color: Colors.orange, size: 48),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Exam Not Available',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'The major exam cannot be accessed at this time.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please try again on $formattedDate',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _initializeWrittenSection() {
     // Initialize written section detector (WITH tab counting)
     _writtenDetector = TabSwitchDetector(
@@ -113,30 +204,30 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
         }
       },
     );
-    
+
     // Set written flag
     _examService.startCodingSection(); // Actually this should be for written
     // We need a separate method for written start
-    
+
     setState(() => _isLoading = false);
   }
-  
+
   Future<void> _completeWrittenSection(int score) async {
     setState(() {
       _writtenScore = score;
       _writtenCompleted = true;
     });
-    
+
     // Mark written as completed
     await _examService.markWrittenCompleted(score: score);
-    
+
     // Stop written detector (no more counting)
     _writtenDetector.stopMonitoring();
-    
+
     // Show completion dialog with options
     _showWrittenCompleteDialog();
   }
-  
+
   void _showWrittenCompleteDialog() {
     showDialog(
       context: context,
@@ -170,10 +261,10 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
-              
+
               // Start coding section
               await _examService.startCodingSection();
-              
+
               setState(() {
                 _currentSection = 1; // Move to coding section
               });
@@ -184,32 +275,32 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
       ),
     );
   }
-  
+
   Future<void> _completeCodingSection(int score) async {
     setState(() {
       _codingCompleted = true;
     });
-    
+
     // Finalize exam
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.studentId)
           .set({
-        'isCurrentlyTakingWritten': true,
-        'isCurrentlyTakingCoding': true,
-        'codingScore': score,
-        'hasTakenExam': true,
-        'examStatus': 'inactive',
-        'completedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      
+            'isCurrentlyTakingWritten': true,
+            'isCurrentlyTakingCoding': true,
+            'codingScore': score,
+            'hasTakenExam': true,
+            'examStatus': 'inactive',
+            'completedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
       _showCompletionDialog();
     } catch (e) {
       print('❌ Error finalizing exam: $e');
     }
   }
-  
+
   void _showCompletionDialog() {
     showDialog(
       context: context,
@@ -229,14 +320,15 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
             child: const Text('Return Home'),
           ),
         ],
       ),
     );
   }
-  
+
   void _showViolationWarning() {
     showDialog(
       context: context,
@@ -278,7 +370,7 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
       ),
     );
   }
-  
+
   void _terminateExam() {
     showDialog(
       context: context,
@@ -301,14 +393,15 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
             child: const Text('Return Home'),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildCompletedSection(String title, int score) {
     return Container(
       color: Colors.grey.shade200,
@@ -320,18 +413,12 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Completed with score: $score',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 16),
             Text(
@@ -353,12 +440,10 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
           title: const Text('Major Exam'),
           backgroundColor: Colors.purple,
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     // Error/completed state
     if (_errorMessage != null) {
       return Scaffold(
@@ -373,12 +458,12 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  _resumeStatus == ExamResumeStatus.completed 
-                      ? Icons.check_circle 
+                  _resumeStatus == ExamResumeStatus.completed
+                      ? Icons.check_circle
                       : Icons.error_outline,
                   size: 64,
-                  color: _resumeStatus == ExamResumeStatus.completed 
-                      ? Colors.green 
+                  color: _resumeStatus == ExamResumeStatus.completed
+                      ? Colors.green
                       : Colors.red,
                 ),
                 const SizedBox(height: 20),
@@ -398,7 +483,7 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
         ),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -411,8 +496,8 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _writtenDetector.violationCount > 0 
-                    ? Colors.orange.shade100 
+                color: _writtenDetector.violationCount > 0
+                    ? Colors.orange.shade100
                     : Colors.white24,
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -421,16 +506,16 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
                   Icon(
                     Icons.warning,
                     size: 16,
-                    color: _writtenDetector.violationCount > 0 
-                        ? Colors.orange 
+                    color: _writtenDetector.violationCount > 0
+                        ? Colors.orange
                         : Colors.white,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${_writtenDetector.violationCount}/2',
                     style: TextStyle(
-                      color: _writtenDetector.violationCount > 0 
-                          ? Colors.orange.shade900 
+                      color: _writtenDetector.violationCount > 0
+                          ? Colors.orange.shade900
                           : Colors.white,
                     ),
                   ),
@@ -443,7 +528,7 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
         index: _currentSection,
         children: [
           // Written Section
-          _writtenCompleted 
+          _writtenCompleted
               ? _buildCompletedSection('Written Section', _writtenScore)
               : WrittenSection(
                   studentId: widget.studentId,
@@ -451,7 +536,7 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
                   detector: _writtenDetector,
                   onComplete: _completeWrittenSection,
                 ),
-          
+
           // Coding Section
           CodingSection(
             studentId: widget.studentId,
@@ -462,7 +547,7 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _writtenDetector.stopMonitoring();

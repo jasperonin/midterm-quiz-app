@@ -37,6 +37,12 @@ class ResetAllUsers {
             'examStatus': 'inactive',
             'hasTakenExam': false,
             'tabSwitchCount': 0,
+            'scores': {'quizScores':[]},
+            'isCurrentlyTakingCoding':false,
+            'isCurrentlyTakingWritten':false,
+            'stats': {'averageQuizScore': 0,'totalQuizzesTaken':0,},
+            'totalScore':0,
+            'writtenScore':0,
             'lastReset': FieldValue.serverTimestamp(),
           };
           

@@ -247,7 +247,7 @@ class _LoginModalState extends State<LoginModal> {
               controller: _studentIdController,
               decoration: InputDecoration(
                 labelText: 'Student ID',
-                hintText: 'e.g., 5250525',
+                hintText: 'e.g., 12346',
                 prefixIcon: const Icon(Icons.badge, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -324,7 +324,7 @@ class _LoginModalState extends State<LoginModal> {
               controller: _lastNameController,
               decoration: InputDecoration(
                 labelText: 'Last Name',
-                hintText: 'e.g., Tan',
+                hintText: 'e.g., Albit',
                 prefixIcon: const Icon(Icons.person, color: Colors.blue),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
