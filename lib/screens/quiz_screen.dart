@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../services/tab_switch_detector.dart';
-import '../services/session_service.dart';
 import '../services/connection_service.dart';
 import '../models/quiz_data.dart';
-import '../models/active_session.dart';
 import '../widgets/quiz/offline_banner.dart';
 import '../widgets/quiz/quiz_app_bar.dart'; // Import the app bar
 import '../widgets/quiz/quiz_progress_bar.dart';
@@ -30,7 +28,6 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   late TabSwitchDetector _detector;
   late QuizService _quizService;
-  late SessionService _sessionService;
   late ConnectionService _connection;
   late StreamSubscription<bool> _connectionSubscription;
 
@@ -48,7 +45,6 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Session management
   String? _sessionId;
-  ActiveSession? _currentSession;
   bool _isResuming = false;
 
   // Connection state
@@ -70,7 +66,6 @@ class _QuizScreenState extends State<QuizScreen> {
     debugPrint('📱 [QuizScreen] Initializing for student: ${widget.studentId}');
 
     _quizService = QuizService();
-    _sessionService = SessionService();
     _connection = ConnectionService();
 
     // Initialize detector with studentId for per-user tab counting
@@ -649,7 +644,6 @@ class _QuizScreenState extends State<QuizScreen> {
     final currentQuestion = _questions[_currentQuestionIndex];
     final currentChoices = _getCurrentChoices();
     final hasAnswered = _userAnswers.containsKey(_currentQuestionIndex);
-    int remainingQuestions = _questions.length - _currentQuestionIndex - 1;
 
     return WillPopScope(
       onWillPop: () async {

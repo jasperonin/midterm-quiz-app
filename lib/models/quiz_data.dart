@@ -67,6 +67,24 @@ class QuizData {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+
+  factory QuizData.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    return QuizData.fromMap(data, doc.id);
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'title': title,
+      'description': description,
+      'questions': questions.map((q) => q.toMap()).toList(),
+      'timeLimit': timeLimit,
+      'passingScore': passingScore,
+      'isPublished': isPublished,
+      'createdBy': createdBy,
+      'createdAt': Timestamp.fromDate(createdAt),
+    };
+  }
 }
 
 class Question {
