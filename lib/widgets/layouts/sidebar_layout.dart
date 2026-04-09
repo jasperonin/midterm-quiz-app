@@ -1,7 +1,6 @@
-// lib/shared/widgets/layouts/sidebar_layout.dart
+// lib/widgets/layouts/sidebar_layout.dart
+import 'package:app/utils/navigation_helper.dart';
 import 'package:flutter/material.dart';
-import '../../config/routes.dart';
-import '../../utils/navigation_helper.dart';
 
 class SidebarLayout extends StatelessWidget {
   final String teacherId;
@@ -10,200 +9,157 @@ class SidebarLayout extends StatelessWidget {
   final Widget child;
 
   const SidebarLayout({
-    Key? key,
+    super.key,
     required this.teacherId,
     required this.teacherName,
     required this.currentRoute,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Sidebar - Wrapped in Material
-        Material(
-          // Add Material wrapper
-          color: Colors.white,
-          child: Container(
-            width: 260,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                // Teacher Profile
-                _buildProfile(),
+        // Sidebar
+        Container(
+          width: 280,
+          color: Colors.teal.shade700,
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              // Teacher avatar
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.person,
+                  size: 40,
+                  color: Colors.teal.shade700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                teacherName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Teacher ID: $teacherId',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Menu items
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildMenuItem(
+                        Icons.dashboard,
+                        'Dashboard',
+                        '/dashboard',
+                        onTap: () => NavigationHelper.goToDashboard(
+                          context,
+                          teacherId: teacherId,
+                          teacherName: teacherName,
+                        ),
+                      ),
+                      _buildMenuItem(
+                        Icons.people,
+                        'Students',
+                        '/students',
+                        onTap: () => NavigationHelper.goToStudents(context),
+                      ),
 
-                // Navigation Menu
-                _buildNavMenu(context),
-
-                const Spacer(),
-
-                // Logout Button
-                _buildLogoutButton(context),
-              ],
-            ),
+                      _buildMenuItem(
+                        Icons.bar_chart,
+                        'Reports',
+                        '/reports',
+                        onTap: () => NavigationHelper.goToAnalytics(context),
+                      ),
+                      _buildMenuItem(
+                        Icons.calendar_today,
+                        'Academic Calendar',
+                        '/academic-calendar',
+                        onTap: () =>
+                            NavigationHelper.goToAcademicCalendar(context),
+                      ),
+                      const Divider(
+                        color: Colors.white54,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      _buildMenuItem(
+                        Icons.settings,
+                        'Settings',
+                        '/settings',
+                        onTap: () => NavigationHelper.goToSettings(context),
+                      ),
+                      _buildMenuItem(
+                        Icons.person,
+                        'Profile',
+                        '/profile',
+                        onTap: () =>
+                            NavigationHelper.goToProfile(context, teacherId),
+                      ),
+                      _buildMenuItem(
+                        Icons.logout,
+                        'Logout',
+                        '/logout',
+                        onTap: () => _handleLogout(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
-
-        // Main Content
-        Expanded(
-          child: Container(color: Colors.grey.shade50, child: child),
-        ),
+        // Main content
+        Expanded(child: child),
       ],
     );
   }
 
-  Widget _buildProfile() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.blue.shade100,
-            child: const Icon(Icons.person, size: 40, color: Colors.blue),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            teacherName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const Text('Instructor', style: TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavMenu(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          _buildNavItem(
-            context,
-            Icons.dashboard,
-            'Dashboard',
-            AppRoutes.dashboard,
-            isSelected: currentRoute == AppRoutes.dashboard,
-          ),
-          _buildNavItem(
-            context,
-            Icons.quiz,
-            'Quizzes',
-            AppRoutes.quizzes,
-            isSelected: currentRoute == AppRoutes.quizzes,
-          ),
-          _buildNavItem(
-            context,
-            Icons.people,
-            'Students',
-            AppRoutes.students,
-            isSelected: currentRoute == AppRoutes.students,
-          ),
-          _buildNavItem(
-            context,
-            Icons.analytics,
-            'Analytics',
-            AppRoutes.analytics,
-            isSelected: currentRoute == AppRoutes.analytics,
-          ),
-          _buildNavItem(
-            context,
-            Icons.settings,
-            'Settings',
-            AppRoutes.settings,
-            isSelected: currentRoute == AppRoutes.settings,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
+  Widget _buildMenuItem(
     IconData icon,
     String label,
     String route, {
-    bool isSelected = false,
+    required VoidCallback onTap,
   }) {
+    final isSelected = currentRoute == route;
     return Container(
-      width: double.infinity,
-      color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.white.withOpacity(0.2) : null,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: ListTile(
-        leading: Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
+        leading: Icon(icon, color: Colors.white),
         title: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.blue : Colors.grey[700],
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
-        selected: isSelected,
-        onTap: () {
-          if (!isSelected) {
-            _navigateToRoute(context, route);
-          }
-        },
+        onTap: onTap,
       ),
     );
   }
 
-  void _navigateToRoute(BuildContext context, String route) {
-    switch (route) {
-      case AppRoutes.dashboard:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.dashboard,
-          arguments: {'teacherId': teacherId, 'teacherName': teacherName},
-        );
-        break;
-      case AppRoutes.quizzes:
-        Navigator.pushReplacementNamed(context, AppRoutes.quizzes);
-        break;
-      case AppRoutes.students:
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.students,
-          arguments: {'teacherId': teacherId},
-        );
-        break;
-      case AppRoutes.analytics:
-        Navigator.pushReplacementNamed(context, AppRoutes.analytics);
-        break;
-      case AppRoutes.settings:
-        Navigator.pushReplacementNamed(context, AppRoutes.settings);
-        break;
-    }
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: OutlinedButton.icon(
-        onPressed: () {
-          _showLogoutDialog(context);
-        },
-        icon: const Icon(Icons.logout),
-        label: const Text('Logout'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.red,
-          side: const BorderSide(color: Colors.red),
-          minimumSize: const Size(double.infinity, 40),
-        ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
+  void _handleLogout(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -216,17 +172,14 @@ class SidebarLayout extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              // Navigate to login screen
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                AppRoutes.home,
+                '/login',
                 (route) => false,
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout'),
           ),
         ],

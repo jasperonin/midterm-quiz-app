@@ -13,6 +13,7 @@ class AppRoutes {
   static const String quizzes = '/quizzes';
   static const String analytics = '/analytics';
   static const String settings = '/settings';
+  static const String academicCalendar = '/academic-calendar';
 
   // Course Management
   static const String courseDetails = '/courses/:id'; // Path pattern

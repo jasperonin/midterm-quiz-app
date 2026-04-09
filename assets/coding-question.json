@@ -181,6 +181,188 @@
       "question": "Create a function int sumOdd(int arr[], int size) that returns the sum of odd numbers in an array. In main(), read 5 integers and print the sum.",
       "example_input": "1 2 3 4 5",
       "example_output": "9"
+    },
+    {
+      "id": 21,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int cube(int n) that returns the cube of a number. In main(), read an integer and print the result.",
+      "example_input": "3",
+      "example_output": "27"
+    },
+    {
+      "id": 22,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Create a function int isPositive(int n) that returns 1 if the number is positive and 0 otherwise. In main(), read a number and print the result.",
+      "example_input": "-5",
+      "example_output": "0"
+    },
+    {
+      "id": 23,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int subtract(int a, int b) that returns the difference of two numbers. In main(), read two integers and print the result.",
+      "example_input": "10 4",
+      "example_output": "6"
+    },
+    {
+      "id": 24,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Create a function int countOdd(int arr[], int size) that counts odd numbers in an array. In main(), read 5 integers and print the count.",
+      "example_input": "1 2 3 4 5",
+      "example_output": "3"
+    },
+    {
+      "id": 25,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int absolute(int n) that returns the absolute value of a number. In main(), read an integer and print the result.",
+      "example_input": "-8",
+      "example_output": "8"
+    },
+    {
+      "id": 26,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Create a function int sumFirstN(int n) that returns the sum from 1 to n. In main(), read n and print the result.",
+      "example_input": "5",
+      "example_output": "15"
+    },
+    {
+      "id": 27,
+      "type": "coding",
+      "difficulty": "easy",
+      "points": 10,
+      "question": "Write a function int isMultiple(int a, int b) that returns 1 if a is a multiple of b, otherwise 0. In main(), read two integers and print the result.",
+      "example_input": "10 5",
+      "example_output": "1"
+    },
+
+    {
+      "id": 28,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int sumRange(int start, int end) that returns the sum of numbers between start and end (inclusive). In main(), read start and end and print the result.",
+      "example_input": "1 5",
+      "example_output": "15"
+    },
+    {
+      "id": 29,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int countDigitsEven(int n) that counts how many even digits are in a number. In main(), read a number and print the count.",
+      "example_input": "24831",
+      "example_output": "3"
+    },
+    {
+      "id": 30,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int secondLargest(int arr[], int size) that returns the second largest value in an array. In main(), read 5 integers and print the result.",
+      "example_input": "4 7 2 9 5",
+      "example_output": "7"
+    },
+    {
+      "id": 31,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int sumSquares(int n) that returns the sum of squares from 1 to n. In main(), read n and print the result.",
+      "example_input": "3",
+      "example_output": "14"
+    },
+    {
+      "id": 32,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int isPrime(int n) that returns 1 if n is prime and 0 otherwise. In main(), read a number and print the result.",
+      "example_input": "7",
+      "example_output": "1"
+    },
+    {
+      "id": 33,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Write a function int reverseArray(int arr[], int size) that prints the array in reverse order. In main(), read 5 integers and call the function.",
+      "example_input": "1 2 3 4 5",
+      "example_output": "5 4 3 2 1"
+    },
+    {
+      "id": 34,
+      "type": "coding",
+      "difficulty": "medium",
+      "points": 15,
+      "question": "Create a function int countDivisible(int arr[], int size, int k) that counts how many elements are divisible by k. In main(), read 5 integers and k, then print the count.",
+      "example_input": "2 4 6 7 9\n2",
+      "example_output": "3"
+    },
+
+    {
+      "id": 35,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int isPalindrome(int n) that returns 1 if a number is a palindrome and 0 otherwise. In main(), read a number and print the result.",
+      "example_input": "121",
+      "example_output": "1"
+    },
+    {
+      "id": 36,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int lcm(int a, int b) that returns the least common multiple of two numbers. In main(), read two numbers and print the LCM.",
+      "example_input": "4 6",
+      "example_output": "12"
+    },
+    {
+      "id": 37,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int sumPrime(int n) that returns the sum of all prime numbers from 1 to n. In main(), read n and print the result.",
+      "example_input": "10",
+      "example_output": "17"
+    },
+    {
+      "id": 38,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int uniqueCount(int arr[], int size) that returns the number of unique elements in an array. In main(), read 5 integers and print the result.",
+      "example_input": "1 2 2 3 4",
+      "example_output": "4"
+    },
+    {
+      "id": 39,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Write a function int binaryToDecimal(int n) that converts a binary number (entered as an integer) to decimal. In main(), read the binary number and print the result.",
+      "example_input": "1011",
+      "example_output": "11"
+    },
+    {
+      "id": 40,
+      "type": "coding",
+      "difficulty": "hard",
+      "points": 25,
+      "question": "Create a function int isArmstrong(int n) that returns 1 if the number is an Armstrong number and 0 otherwise. In main(), read a number and print the result.",
+      "example_input": "153",
+      "example_output": "1"
     }
   ]
 }

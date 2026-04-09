@@ -273,43 +273,43 @@ class _LiveMonitoringScreenState extends State<LiveMonitoringScreen> {
     );
   }
 
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search Student'),
-        content: TextField(
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Enter ID or Last Name',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-          ),
-          onSubmitted: (value) {
-            setState(() {
-              _searchQuery = value.toLowerCase().trim();
-            });
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _searchQuery = '';
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showSearchDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Search Student'),
+  //       content: TextField(
+  //         autofocus: true,
+  //         decoration: const InputDecoration(
+  //           hintText: 'Enter ID or Last Name',
+  //           border: OutlineInputBorder(),
+  //           prefixIcon: Icon(Icons.search),
+  //         ),
+  //         onSubmitted: (value) {
+  //           setState(() {
+  //             _searchQuery = value.toLowerCase().trim();
+  //           });
+  //           Navigator.pop(context);
+  //         },
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             setState(() {
+  //               _searchQuery = '';
+  //             });
+  //             Navigator.pop(context);
+  //           },
+  //           child: const Text('Clear'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('Cancel'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildStatCard(
     String label,
