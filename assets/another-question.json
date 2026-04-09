@@ -262,6 +262,285 @@
         { "text": "Compilation Error", "isCorrect": false },
         { "text": "Undefined Behavior", "isCorrect": false }
       ]
+    },
+    {
+      "id": 61,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int a = 10;\n int *p = &a;\n *p = *p + 5;\n printf(\"%d\", a);\n}",
+      "choices": [
+        { "text": "10", "isCorrect": false },
+        { "text": "15", "isCorrect": true },
+        { "text": "5", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 62,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3] = {1,2,3};\n int *p = arr;\n printf(\"%d\", *(p+1));\n}",
+      "choices": [
+        { "text": "1", "isCorrect": false },
+        { "text": "2", "isCorrect": true },
+        { "text": "3", "isCorrect": false },
+        { "text": "0", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 63,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[4] = {2,4,6,8};\n int sum = 0;\n for(int i=0;i<4;i++){\n  sum += arr[i];\n }\n printf(\"%d\", sum);\n}",
+      "choices": [
+        { "text": "10", "isCorrect": false },
+        { "text": "20", "isCorrect": true },
+        { "text": "16", "isCorrect": false },
+        { "text": "8", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 64,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int x = 3;\n int *p = &x;\n printf(\"%d\", *p + 2);\n}",
+      "choices": [
+        { "text": "3", "isCorrect": false },
+        { "text": "5", "isCorrect": true },
+        { "text": "2", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 65,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int i = 1;\n while(i <= 3){\n  printf(\"%d\", i);\n  i++;\n }\n}",
+      "choices": [
+        { "text": "123", "isCorrect": true },
+        { "text": "321", "isCorrect": false },
+        { "text": "111", "isCorrect": false },
+        { "text": "0123", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 66,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int i = 1;\n do{\n  printf(\"%d\", i);\n  i++;\n } while(i <= 2);\n}",
+      "choices": [
+        { "text": "12", "isCorrect": true },
+        { "text": "21", "isCorrect": false },
+        { "text": "1", "isCorrect": false },
+        { "text": "2", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 67,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3] = {5,10,15};\n int *p = arr;\n printf(\"%d\", *p + *(p+2));\n}",
+      "choices": [
+        { "text": "20", "isCorrect": true },
+        { "text": "15", "isCorrect": false },
+        { "text": "25", "isCorrect": false },
+        { "text": "10", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 68,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int x = 4;\n int *p = &x;\n int **pp = &p;\n printf(\"%d\", **pp);\n}",
+      "choices": [
+        { "text": "4", "isCorrect": true },
+        { "text": "0", "isCorrect": false },
+        { "text": "Address", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 69,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3] = {1,2,3};\n int *p = arr;\n for(int i=0;i<3;i++){\n  printf(\"%d\", *(p+i));\n }\n}",
+      "choices": [
+        { "text": "123", "isCorrect": true },
+        { "text": "321", "isCorrect": false },
+        { "text": "111", "isCorrect": false },
+        { "text": "Error", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 70,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3] = {2,4,6};\n int sum = 0;\n int i = 0;\n while(i < 3){\n  sum += arr[i];\n  i++;\n }\n printf(\"%d\", sum);\n}",
+      "choices": [
+        { "text": "12", "isCorrect": true },
+        { "text": "10", "isCorrect": false },
+        { "text": "6", "isCorrect": false },
+        { "text": "8", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 71,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int x = 5;\n int *p = &x;\n (*p)++;\n printf(\"%d\", x);\n}",
+      "choices": [
+        { "text": "5", "isCorrect": false },
+        { "text": "6", "isCorrect": true },
+        { "text": "0", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 72,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int x = 5;\n int *p = &x;\n *p++;\n printf(\"%d\", x);\n}",
+      "choices": [
+        { "text": "5", "isCorrect": true },
+        { "text": "6", "isCorrect": false },
+        { "text": "0", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false },
+        { "text": "Undefined Behavior", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 73,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={1,2,3};\n int *p=arr;\n p++;\n printf(\"%d\", *p);\n}",
+      "choices": [
+        { "text": "1", "isCorrect": false },
+        { "text": "2", "isCorrect": true },
+        { "text": "3", "isCorrect": false },
+        { "text": "0", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 74,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int i=0;\n for(; i<3; ){\n  printf(\"%d\", i);\n  i++;\n }\n}",
+      "choices": [
+        { "text": "012", "isCorrect": true },
+        { "text": "123", "isCorrect": false },
+        { "text": "001", "isCorrect": false },
+        { "text": "Error", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 75,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[2]={5,10};\n int *p=arr;\n printf(\"%d\", *p + *(p+1));\n}",
+      "choices": [
+        { "text": "10", "isCorrect": false },
+        { "text": "15", "isCorrect": true },
+        { "text": "5", "isCorrect": false },
+        { "text": "0", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 76,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int i=3;\n while(i>0){\n  printf(\"%d\", i);\n  i--;\n }\n}",
+      "choices": [
+        { "text": "321", "isCorrect": true },
+        { "text": "123", "isCorrect": false },
+        { "text": "333", "isCorrect": false },
+        { "text": "012", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 77,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int i=0;\n do{\n  printf(\"%d\", i);\n  i++;\n }while(i<1);\n}",
+      "choices": [
+        { "text": "0", "isCorrect": true },
+        { "text": "1", "isCorrect": false },
+        { "text": "01", "isCorrect": false },
+        { "text": "Error", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 78,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={1,3,5};\n int sum=0;\n for(int i=0;i<3;i++){\n  sum += *(arr+i);\n }\n printf(\"%d\", sum);\n}",
+      "choices": [
+        { "text": "9", "isCorrect": true },
+        { "text": "8", "isCorrect": false },
+        { "text": "15", "isCorrect": false },
+        { "text": "3", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 79,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int x=10;\n int *p=&x;\n printf(\"%d\", *p - 3);\n}",
+      "choices": [
+        { "text": "7", "isCorrect": true },
+        { "text": "10", "isCorrect": false },
+        { "text": "13", "isCorrect": false },
+        { "text": "3", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
+    },
+
+    {
+      "id": 80,
+      "type": "multiple_choice",
+      "points": 2,
+      "question": "What is the output?\n\n#include <stdio.h>\nint main(){\n int arr[3]={2,2,2};\n int *p=arr;\n printf(\"%d\", *(p)+*(p+1)+*(p+2));\n}",
+      "choices": [
+        { "text": "6", "isCorrect": true },
+        { "text": "4", "isCorrect": false },
+        { "text": "2", "isCorrect": false },
+        { "text": "8", "isCorrect": false },
+        { "text": "Compilation Error", "isCorrect": false }
+      ]
     }
   ]
 }

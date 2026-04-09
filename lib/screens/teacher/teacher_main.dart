@@ -11,6 +11,7 @@ import 'package:app/modules/settings/setting_notifications_screen.dart';
 import 'package:app/modules/settings/setting_security_screen.dart';
 import 'package:app/modules/students/student_bulk_import_screen.dart';
 import 'package:app/modules/students/student_form_screen.dart';
+import 'package:app/screens/teacher/academic_calendar_screen.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart'; // Add this import
 import 'package:app/modules/settings/setting_screen.dart';
 import 'package:flutter/material.dart';
@@ -157,6 +158,7 @@ class TeacherApp extends StatelessWidget {
       return StudentDetailsScreen(
         studentId: studentId,
         teacherId: routeArgs['teacherId'] ?? 'teacher_123',
+        studentName: routeArgs['studentName'] ?? '',
       );
     }
 
@@ -186,7 +188,7 @@ class TeacherApp extends StatelessWidget {
         final args = settings.arguments as Map<String, dynamic>?;
         return DashboardScreen(
           teacherId: args?['teacherId'] ?? 'teacher_123',
-          teacherName: args?['teacherName'] ?? 'Dr. Amancio',
+          teacherName: args?['teacherName'] ?? 'Leo',
         );
 
       case AppRoutes.quizzes:
@@ -225,6 +227,7 @@ class TeacherApp extends StatelessWidget {
           return StudentDetailsScreen(
             studentId: args['studentId'] ?? '',
             teacherId: args['teacherId'] ?? 'teacher_123',
+            studentName: args['studetName'] ?? 'Uknown',
           );
         }
         debugPrint('❌ Invalid args for student details: $args');
@@ -287,6 +290,9 @@ class TeacherApp extends StatelessWidget {
         }
         return _buildErrorScreen('Course ID required', context);
 
+      case AppRoutes.academicCalendar:
+        return const AcademicCalendarScreen();
+
       case AppRoutes.courseDetails:
         // This case is handled by path parameter above
         return _buildErrorScreen('Course ID required', context);
@@ -340,51 +346,6 @@ class TeacherApp extends StatelessWidget {
       ),
     );
   }
-
-  // Helper method for error routes
-  // Update the error route method to accept context
-  // Route<dynamic> _errorRoute(String message, BuildContext context) {
-  //   return MaterialPageRoute(
-  //     builder: (_) => Scaffold(
-  //       appBar: AppBar(
-  //         title: const Text('Navigation Error'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //       body: Center(
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(20),
-  //           child: Column(
-  //             mainAxisAlignment: MainAxisAlignment.center,
-  //             children: [
-  //               Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-  //               const SizedBox(height: 16),
-  //               Text(
-  //                 message,
-  //                 style: const TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //               const SizedBox(height: 24),
-  //               ElevatedButton(
-  //                 onPressed: () {
-  //                   // Navigate back to dashboard
-  //                   Navigator.pushNamedAndRemoveUntil(
-  //                     context, // Now context is available
-  //                     AppRoutes.dashboard,
-  //                     (route) => false,
-  //                   );
-  //                 },
-  //                 child: const Text('Go to Dashboard'),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }
 
 // Error Boundary Widget
@@ -399,7 +360,7 @@ class ErrorBoundary extends StatelessWidget {
       builder: (context) {
         try {
           return child;
-        } catch (e, stack) {
+        } catch (e) {
           debugPrint('⚠️ Error caught in boundary: $e');
           return Scaffold(
             body: Center(

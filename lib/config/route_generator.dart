@@ -7,11 +7,12 @@ import 'package:app/modules/settings/setting_general_screen.dart';
 import 'package:app/modules/settings/setting_notifications_screen.dart';
 import 'package:app/modules/settings/setting_screen.dart';
 import 'package:app/modules/settings/setting_security_screen.dart';
+import 'package:app/modules/students/student_details_screen.dart';
+import '../screens/teacher/academic_calendar_screen.dart';
 import 'package:flutter/material.dart';
 import '../modules/dashboard/dashboard_screen.dart';
 import '../modules/courses/course_form_screen.dart';
 import '../modules/students/students_screen.dart';
-import '../modules/students/student_details_screen.dart';
 import '../modules/students/student_form_screen.dart';
 import '../modules/students/student_bulk_import_screen.dart';
 import '../modules/quizzes/quiz_details_screen.dart';
@@ -99,19 +100,23 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const StudentsScreen());
 
       case AppRoutes.studentDetails:
-        // Extract ID from the path
-        final uri = Uri.parse(settings.name ?? '');
+        // Extract studentId from the path pattern
+        // You likely have a function that parses the URI
+        final uri = Uri.parse(settings.name!);
         final segments = uri.pathSegments;
-        if (segments.length >= 2 && segments[0] == 'students') {
-          final studentId = segments[1];
-          return MaterialPageRoute(
-            builder: (_) => StudentDetailsScreen(
-              studentId: studentId,
-              teacherId: 'teacher_123',
-            ),
-          );
-        }
-        return _errorRoute('Invalid arguments');
+
+        // If the route is '/student/5250531', segments = ['student', '5250531']
+        final studentId = segments.length > 1 ? segments[1] : null;
+
+        // Or if you're passing arguments directly
+        final args = settings.arguments as Map<String, dynamic>?;
+
+        return MaterialPageRoute(
+          builder: (context) => StudentDetailsScreen(
+            studentId: args?['studentId'] ?? studentId ?? '',
+            teacherId: args?['teacherId'] ?? '',
+          ),
+        );
 
       case AppRoutes.studentCreate:
         if (args is Map<String, dynamic>) {
@@ -239,6 +244,11 @@ class RouteGenerator {
       case AppRoutes.settingsSecurity:
         return MaterialPageRoute(
           builder: (_) => const SettingsSecurityScreen(),
+        );
+
+      case AppRoutes.academicCalendar:
+        return MaterialPageRoute(
+          builder: (_) => const AcademicCalendarScreen(),
         );
 
       default:

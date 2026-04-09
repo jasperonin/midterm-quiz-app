@@ -32,9 +32,7 @@ class StudentSubmission {
       studentId: id,
       studentName: data['studentName']?.toString() ?? 'Unknown',
       status: data['status']?.toString() ?? 'pending',
-      submittedAt: data['submittedAt'] != null
-          ? (data['submittedAt'] as Timestamp).toDate()
-          : null,
+      submittedAt: _parseDateTime(data['submittedAt']),
       totalScore: _parseInt(data['totalScore']) ?? 0,
       answers: answers,
     );
@@ -63,9 +61,7 @@ class CodingAnswer {
       questionId: _parseInt(json['questionId']),
       difficulty: json['difficulty']?.toString() ?? 'medium',
       code: json['code']?.toString() ?? '',
-      submittedAt: json['submittedAt'] != null
-          ? DateTime.parse(json['submittedAt'].toString())
-          : null,
+      submittedAt: _parseDateTime(json['submittedAt']),
       score: _parseInt(json['score']),
       feedback: json['feedback']?.toString(),
     );
@@ -87,6 +83,25 @@ class CodingAnswer {
 int? _parseInt(dynamic value) {
   if (value == null) return null;
   if (value is int) return value;
+  if (value is num) return value.toInt();
   if (value is String) return int.tryParse(value);
+  return null;
+}
+
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value);
+  if (value is Map<String, dynamic>) {
+    final seconds = value['_seconds'];
+    if (seconds is num) {
+      final nanoseconds = value['_nanoseconds'];
+      final millis =
+          (seconds * 1000).toInt() +
+          ((nanoseconds is num ? nanoseconds : 0) / 1000000).round();
+      return DateTime.fromMillisecondsSinceEpoch(millis);
+    }
+  }
   return null;
 }

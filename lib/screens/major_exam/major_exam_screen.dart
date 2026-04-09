@@ -242,8 +242,6 @@ class _MajorExamScreenState extends State<MajorExamScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text('Your score: $_writtenScore'),
-            const SizedBox(height: 8),
             const Text(
               'You can now proceed to the Coding section.',
               textAlign: TextAlign.center,

@@ -67,12 +67,34 @@ class NavigationHelper {
     );
   }
 
-  static void goToStudentDetails(BuildContext context, String studentId) {
+  static void goToStudentDetails(
+    BuildContext context, {
+    required String studentId,
+    required String teacherId,
+  }) {
+    // Use the existing route pattern with parameter
     Navigator.pushNamed(
       context,
       AppRoutes.studentDetails,
-      arguments: {'studentId': studentId},
+      arguments: {'studentId': studentId, 'teacherId': teacherId},
     );
+  }
+
+  // lib/shared/utils/navigation_helper.dart
+  static void goToStudentDetail(
+    BuildContext context, {
+    required String studentId,
+    required String teacherId,
+  }) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.studentDetails,
+      arguments: {'studentId': studentId, 'teacherId': teacherId},
+    );
+  }
+
+  static void goToAcademicCalendar(BuildContext context) {
+    Navigator.pushNamed(context, AppRoutes.academicCalendar);
   }
 
   static void goToCreateStudent(BuildContext context, {String? courseId}) {
